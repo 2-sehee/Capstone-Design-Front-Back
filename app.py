@@ -43,7 +43,8 @@ app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     
     # content will be rendered in this element
-    html.Div(id='page-content')
+    html.Div(id='page-content'),
+    #html.Div(id="hidden_div_for_redirect_callback")
 
 ])
 
@@ -73,23 +74,24 @@ def analytics_page(location):
     
 @callback(
     Output('url', 'pathname'),
-    Input('graph', 'clickData'))
+    Input('graph', 'clickData'), prevent_initial_call=True)
 def move_page(clickData):
     print(clickData)
     if clickData is not None:            
         location = clickData['points'][0]['location']
         return "/"+location
         #dcc.Link(herf="/"+location,style= {'display': 'block'})
+    else : return "/"
     
 
 
 @callback(Output('page-content', 'children'),
-              [Input('url', 'pathname')])
+               [Input('url', 'pathname')],prevent_initial_call=True)
 def display_page(pathname):
     for city in df['SIG_KOR_NM']:
         if pathname == '/'+city:
             return analytics_page(city)
-    
+    print("display")
     return  index_page
 
 
