@@ -2,8 +2,8 @@ from dash import Dash, html, dcc, Input, Output, callback
 import dash
 import plotly.express as px
 import pandas as pd
-import dash_defer_js_import as dji
-import dash_leaflet as dls
+#import dash_defer_js_import as dji
+#import dash_leaflet as dls
 import json
 
 
