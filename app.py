@@ -2,8 +2,8 @@ from dash import Dash, html, dcc, Input, Output, callback
 import dash
 import plotly.express as px
 import pandas as pd
-import dash_defer_js_import as dji
-import dash_leaflet as dls
+#import dash_defer_js_import as dji
+#import dash_leaflet as dls
 import json
 
 
@@ -22,7 +22,7 @@ df = pd.DataFrame({
     "Amount": [1000,500,100,0,234,764,2436,764,34,87,12,76,235,764,124,7853,14,564,236,764,1348,536,234,546,5271]
 })
 
-zdfadsfa
+
 #데이터 로드
 geometry = json.load(open('./assets/TL_SCCO_SIG.json',encoding='utf-8'))
 
