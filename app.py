@@ -1,5 +1,6 @@
 from dash import Dash, html, dcc, Input, Output, callback
 import dash
+from datetime import date
 import plotly.express as px
 import pandas as pd
 #import dash_defer_js_import as dji
@@ -36,15 +37,32 @@ fig.update_layout(title_text="example",title_font_size=20)
 
 
 app.layout = html.Div([
+    html.Div([
+        html.H2(children='데이터 셋팅 <<'),
+        html.H3(children='기간 및 이동수단을 설정해주세요.'),
+        html.H4('기간 설정'),
+        dcc.DatePickerRange(
+            id='date-picker-range',
+            min_date_allowed=date(2000, 1, 1),
+            max_date_allowed=date(2022, 10, 16),
+            initial_visible_month=date(2022, 9, 15),
+            end_date=date(2022, 10, 15),
+        ),
+        html.H4('이동수단 설정'),
+        dcc.Dropdown(['오토바이', '자전거', '킥보드'], '오토바이', id='mobility-dropdown'),
+        html.Div(id='dd_mobility'),
+    ],
+    style={'width':'20%', 'float':'left','display':'inline_block'}),
     
+    html.Div([   
+        # represents the browser address bar and doesn't render anything
+        dcc.Location(id='url', refresh=False),
     
-    
-    # represents the browser address bar and doesn't render anything
-    dcc.Location(id='url', refresh=False),
-    
-    # content will be rendered in this element
-    html.Div(id='page-content'),
-    #html.Div(id="hidden_div_for_redirect_callback")
+        # content will be rendered in this element
+        html.Div(id='page-content'),
+        #html.Div(id="hidden_div_for_redirect_callback")
+    ],
+    style={'width':'80%','float':'right', 'display':'inline-block'}),
 
 ])
 
@@ -95,6 +113,6 @@ def display_page(pathname):
     return  index_page
 
 
-
+#서버 실행
 if __name__ == '__main__':
     app.run_server(debug=True)
