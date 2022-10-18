@@ -10,7 +10,7 @@ import json
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 
-app = Dash(__name__)
+app = Dash(__name__,suppress_callback_exceptions=True)
 
 # assume you have a "long-form" data frame
 # see https://plotly.com/python/px-arguments/ for more options
@@ -53,12 +53,12 @@ app.layout = html.Div([
 
 # @callback(Output('page-content', 'children'),
 #               [Input('url', 'pathname')])
-# def display_page(pathname):
-#     return html.Div([
-#         html.H3(f'You are on page {pathname}')
-#     ])
+def display_page(pathname):
+     return html.Div([
+         html.H3(f'You are on page {pathname}')
+     ]) 
     
-    
+  
 index_page = html.Div([
     dcc.Graph(id='graph',figure=fig),
     html.Div(id='index'),
