@@ -39,23 +39,9 @@ fig.update_layout(title_text="example",title_font_size=20)
 
 #서울시 동 데이터 로드
 dong = json.load(open('./assets/seoul.json',encoding='utf-8'))
-k={"type": "FeatureCollection","features":[i for i in dong['features'] if i['properties']['sggnm']=="종로구"]}
 
-fig1 = go.Figure(go.Scattermapbox(
-    mode = "markers",
-    lon = [126.98], lat = [37.56],
-    marker = {'size': 20, 'color': ["cyan"]}))
+fig1 = go.Figure(go.Scattermapbox())
 
-        
-fig1.update_layout(
-    mapbox = {
-        'style': "stamen-terrain",
-        'center': { 'lon': 126.98, 'lat': 37.56},
-        'zoom': 12, 
-        'layers': [{ 
-            'source': k,
-            'type': "fill", 'below': "traces", 'color': "royalblue"}]},
-    margin = {'l':0, 'r':0, 'b':0, 't':0})
 
 
 
@@ -87,9 +73,9 @@ def analytics_page(location):
     xy=features['features'][0]['geometry']['coordinates'][0][0][5]   
     fig1.update_layout(
             mapbox = {
-                'style': "stamen-terrain",
+                'style': "carto-positron",
                 'center': { 'lon': xy[0], 'lat': xy[1]},
-                'zoom': 11, 
+                'zoom': 12, 
                 'layers': [{ 
                     'source': features,
                     'type': "fill", 
@@ -112,7 +98,7 @@ def analytics_page(location):
                 ),
         html.Div(id="map",children=[
             html.Div(),
-            dcc.Graph(id='dong-graph',figure=fig1)]),
+            dcc.Graph(id='dong-graph',figure=fig1)],style={'width':"50%","float": "left"}),
     ])
     
 @callback(
