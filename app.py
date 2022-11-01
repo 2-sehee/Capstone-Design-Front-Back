@@ -6,6 +6,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import json
+import db
 
 
 
@@ -70,7 +71,18 @@ index_page = html.Div([
 def analytics_page(location):
     print(location)
     features = {"type": "FeatureCollection","features":[i for i in dong['features'] if i['properties']['sggnm']==location]}
-    xy=features['features'][0]['geometry']['coordinates'][0][0][5]   
+    xy=features['features'][0]['geometry']['coordinates'][0][0][5]
+    crime_info = db.select_gu(str(location))
+    fig1.add_trace(go.Scattermapbox(
+        lat= crime_info[:]['x'] if not crime_info.empty else [],
+        lon=crime_info[:]['y'] if not crime_info.empty else [],
+        mode='markers',
+        marker=go.scattermapbox.Marker(
+            size=14,
+            color='rgb(242, 24, 24)'
+        ),
+        text=crime_info[:]['location'] if not crime_info.empty else [],
+    ))
     fig1.update_layout(
             mapbox = {
                 'style': "carto-positron",
@@ -147,6 +159,7 @@ def display_page2(href):
             return analytics_page(city)
 
     return  index_page
+
 
 
 
