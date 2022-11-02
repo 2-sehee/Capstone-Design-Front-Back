@@ -1,20 +1,26 @@
-from dash import Dash, html, dcc, Input, Output, callback
+
+from importlib.resources import path
+from dash import Dash, html, dcc, Input, Output, callback, ctx
 import dash
 from datetime import date
 import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
-#import dash_defer_js_import as dji
-#import dash_leaflet as dls
 import json
+import db
+from datetime import timedelta, date
+
 
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 
-app = Dash(__name__)
+app = Dash(__name__,suppress_callback_exceptions=True)
 
 # assume you have a "long-form" data frame
 # see https://plotly.com/python/px-arguments/ for more options
+
+cities=["광진구","강동구","성동구","강남구","강서구","강북구","관악구","구로구","금천구","노원구","동대문구","도봉구","동작구","마포구","서대문구","성북구","서초구","송파구","영등포구","용산구","양천구","은평구","종로구","중구","중랑구"]
 
 
 #임시데이터
@@ -24,7 +30,7 @@ df = pd.DataFrame({
 })
 
 
-#데이터 로드
+#서울시 구 데이터 로드
 geometry = json.load(open('./assets/TL_SCCO_SIG.json',encoding='utf-8'))
 
 #Choropleth 시각화 -> 추후 SIG_KOR_NM column 을 누구나 알아볼 수 있게 바꿀예정(ex.city)
@@ -33,6 +39,13 @@ fig=px.choropleth(df,geojson=geometry,locations='SIG_KOR_NM',color='Amount',
                   featureidkey='properties.SIG_KOR_NM')
 fig.update_geos(fitbounds="locations",visible=False)
 fig.update_layout(title_text="example",title_font_size=20)
+
+#서울시 동 데이터 로드
+dong = json.load(open('./assets/seoul.json',encoding='utf-8'))
+
+fig1 = go.Figure(go.Scattermapbox())
+
+
 
 
 
@@ -67,16 +80,7 @@ app.layout = html.Div([
 ])
 
 
-#style= {'display': 'block'}
-
-# @callback(Output('page-content', 'children'),
-#               [Input('url', 'pathname')])
-# def display_page(pathname):
-#     return html.Div([
-#         html.H3(f'You are on page {pathname}')
-#     ])
-    
-    
+  
 index_page = html.Div([
     dcc.Graph(id='graph',figure=fig),
     html.Div(id='index'),
@@ -84,11 +88,72 @@ index_page = html.Div([
 ])
 
 def analytics_page(location):
-    return html.Div([
-            html.Div(id = "second_page"),
-            html.H3(f'You click {location}')
+    print(location)
+    
+    #왼쪽 지도 관련
+    features = {"type": "FeatureCollection","features":[i for i in dong['features'] if i['properties']['sggnm']==location]}
+    xy=features['features'][0]['geometry']['coordinates'][0][0][5]
+    crime_info = db.select_gu(str(location))
+    fig1.add_trace(go.Scattermapbox(
+        lat= crime_info['x'] if not crime_info.empty else [],
+        lon=crime_info['y'] if not crime_info.empty else [],
+        mode='markers',
+        marker=go.scattermapbox.Marker(
+            size=14,
+            color='rgb(242, 24, 24)'
+        ),
+        text=crime_info['location'] if not crime_info.empty else [],
+    ))
+    fig1.update_layout(
+            mapbox = {
+                'style': "carto-positron",
+                'center': { 'lon': xy[0], 'lat': xy[1]},
+                'zoom': 12, 
+                'layers': [{ 
+                    'source': features,
+                    'type': "fill", 
+                    'below': "traces", 
+                    'color': "royalblue"}]},
+            margin = {'l':0, 'r':0, 'b':0, 't':0})        
+    
+    #오른쪽 그래프 관련 수정수정수정하자~~~~~~~~~~~~~~~~
+    fig2 = go.Figure()
+    fig2.add_trace(
+        go.Scatter(x=list(i.time() for i in crime_info['time']),line = dict(color='red'))
+    )     
+    
+    return html.Div(id="analytics_page-content",
+        children=[
+        dcc.Location(id='url_2', refresh=False),
+        html.Div(id="title",
+                children=[
+                    html.Div(id = "second_page"),
+                    html.Div(location),
+                    dcc.Dropdown(cities,location,id="city-dropdown",style={'width':"50%","float": "left"}),
+                    html.H2("Dashboard",style={"float": "left"})],
+                style={
+                     'height':'150px',
+                     'backgroundColor':'#787878'}
+                ),
+        html.Div(id="map",children=[
+            html.Div(),
+            dcc.Graph(id='dong-graph',figure=fig1)],style={'width':"50%","float": "left"}),
+        
+        html.Div(id="map",children=[
+            html.Div(),
+            dcc.Graph(id='dong-graph',figure=fig2)],style={'width':"50%","float": "right"})
     ])
-
+    
+@callback(
+    Output('url', 'href'),
+    Input('city-dropdown', 'value'), prevent_initial_call=True)
+def move_page_dropdown(value):
+    print("move")
+    print(value)
+    if value is not None:    
+        return "/"+value
+        
+    
     
 @callback(
     Output('url', 'pathname'),
@@ -98,21 +163,40 @@ def move_page(clickData):
     if clickData is not None:            
         location = clickData['points'][0]['location']
         return "/"+location
-        #dcc.Link(herf="/"+location,style= {'display': 'block'})
     else : return "/"
     
 
 
 @callback(Output('page-content', 'children'),
-               [Input('url', 'pathname')],prevent_initial_call=True)
+               Input('url', 'pathname'),prevent_initial_call=True)
 def display_page(pathname):
-    for city in df['SIG_KOR_NM']:
-        if pathname == '/'+city:
-            return analytics_page(city)
     print("display")
+    
+    print(pathname)
+    for city in df['SIG_KOR_NM']:
+        if pathname == '/'+city :
+            return analytics_page(city)
+
+    return  index_page
+
+@callback(Output('analytics_page-content', 'children'),
+               Input('url','href'),prevent_initial_call=True)
+def display_page2(href):
+    print("display2")
+    print(href)
+    
+    for city in df['SIG_KOR_NM']:
+        if href=="/"+city:
+            return analytics_page(city)
+
     return  index_page
 
 
-#서버 실행
+
+
+
+
+
+
 if __name__ == '__main__':
     app.run_server(debug=True)
