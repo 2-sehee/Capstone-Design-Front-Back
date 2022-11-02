@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 import pandas as pd
 import json
 import db
+from datetime import timedelta, date
 
 
 
@@ -70,18 +71,20 @@ index_page = html.Div([
 
 def analytics_page(location):
     print(location)
+    
+    #왼쪽 지도 관련
     features = {"type": "FeatureCollection","features":[i for i in dong['features'] if i['properties']['sggnm']==location]}
     xy=features['features'][0]['geometry']['coordinates'][0][0][5]
     crime_info = db.select_gu(str(location))
     fig1.add_trace(go.Scattermapbox(
-        lat= crime_info[:]['x'] if not crime_info.empty else [],
-        lon=crime_info[:]['y'] if not crime_info.empty else [],
+        lat= crime_info['x'] if not crime_info.empty else [],
+        lon=crime_info['y'] if not crime_info.empty else [],
         mode='markers',
         marker=go.scattermapbox.Marker(
             size=14,
             color='rgb(242, 24, 24)'
         ),
-        text=crime_info[:]['location'] if not crime_info.empty else [],
+        text=crime_info['location'] if not crime_info.empty else [],
     ))
     fig1.update_layout(
             mapbox = {
@@ -93,7 +96,13 @@ def analytics_page(location):
                     'type': "fill", 
                     'below': "traces", 
                     'color': "royalblue"}]},
-            margin = {'l':0, 'r':0, 'b':0, 't':0})             
+            margin = {'l':0, 'r':0, 'b':0, 't':0})        
+    
+    #오른쪽 그래프 관련 수정수정수정하자~~~~~~~~~~~~~~~~
+    fig2 = go.Figure()
+    fig2.add_trace(
+        go.Scatter(x=list(i.time() for i in crime_info['time']),line = dict(color='red'))
+    )     
     
     return html.Div(id="analytics_page-content",
         children=[
@@ -111,6 +120,10 @@ def analytics_page(location):
         html.Div(id="map",children=[
             html.Div(),
             dcc.Graph(id='dong-graph',figure=fig1)],style={'width':"50%","float": "left"}),
+        
+        html.Div(id="map",children=[
+            html.Div(),
+            dcc.Graph(id='dong-graph',figure=fig2)],style={'width':"50%","float": "right"})
     ])
     
 @callback(
