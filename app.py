@@ -1,7 +1,13 @@
+<<<<<<< HEAD
 
 from importlib.resources import path
 from dash import Dash, html, dcc, Input, Output, callback, ctx
+=======
+from turtle import width
+from dash import Dash, Input, Output, State, dcc, html, callback
+>>>>>>> 6d6fbe8 (offcanvas 사용 코드)
 import dash
+import dash_bootstrap_components as dbc
 from datetime import date
 import plotly.express as px
 import plotly.graph_objects as go
@@ -11,6 +17,7 @@ import db
 from datetime import timedelta, date
 
 
+<<<<<<< HEAD
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -22,12 +29,32 @@ app = Dash(__name__,suppress_callback_exceptions=True)
 
 cities=["광진구","강동구","성동구","강남구","강서구","강북구","관악구","구로구","금천구","노원구","동대문구","도봉구","동작구","마포구","서대문구","성북구","서초구","송파구","영등포구","용산구","양천구","은평구","종로구","중구","중랑구"]
 
+=======
+app = dash.Dash(__name__)
+>>>>>>> 6d6fbe8 (offcanvas 사용 코드)
 
 #임시데이터
 df = pd.DataFrame({
     "SIG_KOR_NM": ["광진구","강동구","성동구","강남구","강서구","강북구","관악구","구로구","금천구","노원구","동대문구","도봉구","동작구","마포구","서대문구","성북구","서초구","송파구","영등포구","용산구","양천구","은평구","종로구","중구","중랑구"],
     "Amount": [1000,500,100,0,234,764,2436,764,34,87,12,76,235,764,124,7853,14,564,236,764,1348,536,234,546,5271]
 })
+
+# the style arguments for the sidebar. We use position:fixed and a fixed width
+SIDEBAR_STYLE = {
+    "position": "absolute",
+    "top": 0,
+    "left": 0,
+    "bottom": 0,
+    "width": "18rem",
+    "padding": "2rem 1rem",
+    "background-color": "#f8f9fa",
+    "display":"visible",
+    "float":"left",
+}
+
+# the styles for the main content position it to the right of the sidebar and
+# add some padding.
+
 
 
 #서울시 구 데이터 로드
@@ -49,38 +76,64 @@ fig1 = go.Figure(go.Scattermapbox())
 
 
 
-app.layout = html.Div([
-    html.Div([
-        html.H2(children='데이터 셋팅 <<'),
-        html.H3(children='기간 및 이동수단을 설정해주세요.'),
-        html.H4('기간 설정'),
-        dcc.DatePickerRange(
-            id='date-picker-range',
-            min_date_allowed=date(2000, 1, 1),
-            max_date_allowed=date(2022, 10, 16),
-            initial_visible_month=date(2022, 9, 15),
-            end_date=date(2022, 10, 15),
+offcanvas = html.Div([
+    dbc.Button(
+        "open offcanvas",
+        id="open-offcanvas",
+        n_clicks=0
+    ),
+    dbc.Offcanvas(
+        html.P(
+             html.Div([
+                html.H2(children='데이터 셋팅'),
+                html.H3(children='기간 및 이동수단을 설정해주세요.'),
+                html.H4('기간 설정'),
+                dcc.DatePickerRange(
+                    id='date-picker-range',
+                    min_date_allowed=date(2000, 1, 1),
+                    max_date_allowed=date(2022, 10, 16),
+                    initial_visible_month=date(2022, 9, 15),
+                ),
+                html.H4('이동수단 설정'),
+                dcc.Dropdown(
+                    ['오토바이'], '오토바이', 
+                    id='mobility-dropdown',
+                    style={
+                        'width':"18rem",
+                    },),
+                html.Div(id='dd_mobility'),
+                ],
+                style=SIDEBAR_STYLE),
         ),
-        html.H4('이동수단 설정'),
-        dcc.Dropdown(['오토바이', '자전거', '킥보드'], '오토바이', id='mobility-dropdown'),
-        html.Div(id='dd_mobility'),
-    ],
-    style={'width':'20%', 'float':'left','display':'inline_block'}),
-    
-    html.Div([   
-        # represents the browser address bar and doesn't render anything
-        dcc.Location(id='url', refresh=False),
-    
-        # content will be rendered in this element
-        html.Div(id='page-content'),
-        #html.Div(id="hidden_div_for_redirect_callback")
-    ],
-    style={'width':'80%','float':'right', 'display':'inline-block'}),
-
+        id="offcanvas",
+        title="title",
+        is_open=False,
+        close_button=True,
+    ),
 ])
 
 
+<<<<<<< HEAD
   
+=======
+
+CONTENT_STYLE = {
+    "margin-left": "20rem",
+    "mragin-right": "2rem",
+    "padding": "2rem 1rem",
+}
+content =  html.Div([   
+    # represents the browser address bar and doesn't render anything
+    dcc.Location(id='url', refresh=False),
+    
+    # content will be rendered in this element
+    html.Div(id='page-content'),
+    #html.Div(id="hidden_div_for_redirect_callback")
+    ],
+    style=CONTENT_STYLE
+)
+
+>>>>>>> 6d6fbe8 (offcanvas 사용 코드)
 index_page = html.Div([
     dcc.Graph(id='graph',figure=fig),
     html.Div(id='index'),
@@ -191,12 +244,27 @@ def display_page2(href):
 
     return  index_page
 
+@callback(
+    Output("offcanvas","is_open"),
+    [Input("open-offcanvas","n_clicks")],
+    [State("offcanvas","is_open")],
+)
+
+<<<<<<< HEAD
 
 
 
 
 
 
+=======
+def toggle_opencanvas(n,is_open):
+    if n:
+        return not is_open
+    return is_open
 
+app.layout = html.Div([offcanvas, content])
+#서버 실행
+>>>>>>> 6d6fbe8 (offcanvas 사용 코드)
 if __name__ == '__main__':
     app.run_server(debug=True)
