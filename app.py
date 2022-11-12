@@ -8,11 +8,14 @@ import pandas as pd
 import json
 import db
 from datetime import timedelta, date
+import dash_leaflet as dl
+import dash_leaflet.express as dlx
+from dash_extensions.javascript import arrow_function
 
 
-
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
+#두번쨰페이지 지도 소스
+url = 'https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png'
+attribution = '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> '
 
 app = Dash(__name__,suppress_callback_exceptions=True)
 
@@ -28,6 +31,17 @@ df = pd.DataFrame({
     "Amount": [1000,500,100,0,234,764,2436,764,34,87,12,76,235,764,124,7853,14,564,236,764,1348,536,234,546,5271]
 })
 
+#마커추가
+def add_marker(gu,dong):
+    data = db.select_dong_cctv(gu,dong)
+    position = data[['x','y']].values.tolist()
+    print(position)
+    print("^^^^")
+    plus_marker=[]
+    for i in position:
+        plus_marker.append(dl.Marker(position = i))
+    return plus_marker
+
 
 #서울시 구 데이터 로드
 geometry = json.load(open('./assets/TL_SCCO_SIG.json',encoding='utf-8'))
@@ -41,11 +55,6 @@ fig.update_layout(title_text="example",title_font_size=20)
 
 #서울시 동 데이터 로드
 dong = json.load(open('./assets/seoul.json',encoding='utf-8'))
-
-fig1 = go.Figure(go.Scattermapbox())
-
-
-
 
 
 app.layout = html.Div([
@@ -69,40 +78,23 @@ index_page = html.Div([
     print("index")
 ])
 
+
+
 def analytics_page(location):
     print(location)
     
     #왼쪽 지도 관련
     features = {"type": "FeatureCollection","features":[i for i in dong['features'] if i['properties']['sggnm']==location]}
     xy=features['features'][0]['geometry']['coordinates'][0][0][5]
-    crime_info = db.select_gu(str(location))
-    fig1.add_trace(go.Scattermapbox(
-        lat= crime_info['x'] if not crime_info.empty else [],
-        lon=crime_info['y'] if not crime_info.empty else [],
-        mode='markers',
-        marker=go.scattermapbox.Marker(
-            size=14,
-            color='rgb(242, 24, 24)'
-        ),
-        text=crime_info['location'] if not crime_info.empty else [],
-    ))
-    fig1.update_layout(
-            mapbox = {
-                'style': "carto-positron",
-                'center': { 'lon': xy[0], 'lat': xy[1]},
-                'zoom': 12, 
-                'layers': [{ 
-                    'source': features,
-                    'type': "fill", 
-                    'below': "traces", 
-                    'color': "royalblue"}]},
-            margin = {'l':0, 'r':0, 'b':0, 't':0})        
-    
+    geobuf=dlx.geojson_to_geobuf(features)
+    #fig1.layout.hovermode = 'closest'        
+    crime_info = db.select_gu(location)
     #오른쪽 그래프 관련 수정수정수정하자~~~~~~~~~~~~~~~~
-    fig2 = go.Figure()
-    fig2.add_trace(
-        go.Scatter(x=list(i.time() for i in crime_info['time']),line = dict(color='red'))
-    )     
+    data= go.Bar(x=list(i.to_pydatetime().day for i in crime_info['time']))
+    fig2 = go.Figure(data=data)
+    # fig2.add_trace(
+    #     go.Scatter(x=list(i.to_pydatetime().day for i in crime_info['time']),line = dict(color='red'))
+    # )     
     
     return html.Div(id="analytics_page-content",
         children=[
@@ -117,14 +109,35 @@ def analytics_page(location):
                      'height':'150px',
                      'backgroundColor':'#787878'}
                 ),
-        html.Div(id="map",children=[
-            html.Div(),
-            dcc.Graph(id='dong-graph',figure=fig1)],style={'width':"50%","float": "left"}),
+        
+        html.Div(children=[
+            dl.Map(center=[37.58156996270885,127.01178832759342], zoom=10, 
+            children=[
+                dl.TileLayer(url=url,attribution=attribution), 
+                dl.GeoJSON(data=features),  # in-memory geojson (slowest option)
+                dl.GeoJSON(data=geobuf, format="geobuf"),  # in-memory geobuf (smaller payload than geojson)
+                dl.GeoJSON(data=features, id="capitals"),  # geojson resource (faster than in-memory)
+                dl.LayersControl([
+                    dl.Overlay(
+                        dl.LayerGroup(add_marker('강동구','명일동')), 
+                        name="markers", checked=True)]),
+                dl.GeoJSON(data=geobuf, id="states",format="geobuf",zoomToBoundsOnClick=True,hoverStyle=arrow_function(dict(weight=5, color='#666', dashArray=''))),  # geobuf resource (fastest option)
+    ], style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block"}, id="map"),
+            html.Div(id="state"), html.Div(id="capital")],style={'width':"50%","float": "left"}),
+        
         
         html.Div(id="map",children=[
-            html.Div(),
-            dcc.Graph(id='dong-graph',figure=fig2)],style={'width':"50%","float": "right"})
+            dcc.Graph(id='diverse-graph',figure=fig2)],style={'width':"50%","float": "right"})
     ])
+    
+    
+    
+def detail_page(detail_location):
+    return html.Div(id="detail_page-content",children=[
+        
+        html.Div("i clieked"+detail_location)
+    ])
+    
     
 @callback(
     Output('url', 'href'),
@@ -174,6 +187,34 @@ def display_page2(href):
     return  index_page
 
 
+
+@callback(Output("capital", "children"), [Input("states", "click_feature")])
+def capital_click(feature):
+    if feature is not None:
+        return f"You clicked {feature['properties']['adm_nm']}"
+
+
+@callback(Output("state", "children"), [Input("states", "hover_feature")])
+def state_hover(feature):
+    if feature is not None:
+        return f"{feature['properties']['adm_nm']}"
+
+
+# def update_point(trace, points, selector):
+#     with fig1.batch_update():
+#         return
+
+       
+
+@callback(Output("detail_page-content",'chiledren'),
+          Input('dong-graph','clickData'))
+def A(clickData):
+    print("^^"+clickData)
+    return
+    
+
+
+    
 
 
 
