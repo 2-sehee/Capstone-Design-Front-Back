@@ -1,0 +1,100 @@
+/*스타일 설정을 위한 css file*/
+
+/*page 1*/
+
+/*헤더 아이콘(오토바이)*/
+.header_img {
+    font-size: 20px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/*헤더 타이틀 (Zol-zol-zol)*/
+.header_title {
+    color: #FFFFFF;
+    font-size: 48px;
+    font-weight: bold;
+    text-align: center;
+    margin: 0 auto;
+}
+
+/*헤더 부제목 (설명~)*/
+.header_description {
+    color: #CFCFCF;
+    margin: 4px auto;
+    text-align: center;
+    max-width: 384px;
+}
+
+/*헤더 bg box*/
+.header_box {
+    background-color: #070b1d;
+    height: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/*데이터 셋팅 제목(기간 설정, 이동수단 설정)*/
+.dropdown_title {
+    margin-bottom: 6px;
+    display: flex;
+    font-weight: bold;
+    color: #070b1d ;
+}
+
+/*데이터 셋팅 박스 설명인데 안씀
+.menu_discription {
+    height: 100px;
+    max-width: 1200px;
+    display: flex;
+    justify-content: space-evenly; /*아이템 사이 균일한 간격
+    padding-top: 32px;
+    margin: 0px auto 0 auto;
+    background-color: #FFFFFF;
+    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.18);
+    
+}*/
+
+/*데이터 셋팅 bg box, 
+fade_btn이 구현되면 이 부분이 fade부분이 됨*/
+.dropdown_bg {
+    height: 112px;
+    width: 75%;
+    display: flex;
+    float : left;
+    justify-content: space-evenly;
+    padding-top: 10px;
+    margin: 0px auto 0 auto;
+    background-color: #f0f9ff;
+    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.18);
+}
+
+/*지도 display bg box*/
+.index_page {
+    height: 600px;
+    width: 75%;
+    display: flex;
+    float : left;
+    flex-direction: column;
+    justify-content: center;
+    background-color: #ffffffa6;
+    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.18);
+}
+
+/*index_page graph*/
+.graph {
+    height: 600px;
+    width: 75%;
+    display: flex;
+    float : left;
+    position: static;
+    padding-top: 40px;
+    margin: 0px auto 0 auto;
+    background-color: #ffffffa6;
+    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.18);
+}
+
+
+
+

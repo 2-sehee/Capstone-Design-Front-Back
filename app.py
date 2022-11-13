@@ -1,23 +1,24 @@
-<<<<<<< HEAD
 
 from importlib.resources import path
 from dash import Dash, html, dcc, Input, Output, callback, ctx
-=======
-from turtle import width
-from dash import Dash, Input, Output, State, dcc, html, callback
->>>>>>> 6d6fbe8 (offcanvas 사용 코드)
 import dash
-import dash_bootstrap_components as dbc
-from datetime import date
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import json
 import db
 from datetime import timedelta, date
+import dash_leaflet as dl
+import dash_leaflet.express as dlx
+from dash_extensions.javascript import arrow_function
 
+#--------------------------------------------------------------------#
+#웹 구성
+#구 -> 일주월, 정지선 TOP5, 인도TOP5 (index_page)
+#동 -> 일주월, CCTV위치(마커표시), 
+#cctv->일주일단위의 추이표(현재가 젤 뒤에 있는), CCTV에서의 범법행위 개수
+#--------------------------------------------------------------------#
 
-<<<<<<< HEAD
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -27,34 +28,14 @@ app = Dash(__name__,suppress_callback_exceptions=True)
 # assume you have a "long-form" data frame
 # see https://plotly.com/python/px-arguments/ for more options
 
+#1. data 
 cities=["광진구","강동구","성동구","강남구","강서구","강북구","관악구","구로구","금천구","노원구","동대문구","도봉구","동작구","마포구","서대문구","성북구","서초구","송파구","영등포구","용산구","양천구","은평구","종로구","중구","중랑구"]
-
-=======
-app = dash.Dash(__name__)
->>>>>>> 6d6fbe8 (offcanvas 사용 코드)
 
 #임시데이터
 df = pd.DataFrame({
     "SIG_KOR_NM": ["광진구","강동구","성동구","강남구","강서구","강북구","관악구","구로구","금천구","노원구","동대문구","도봉구","동작구","마포구","서대문구","성북구","서초구","송파구","영등포구","용산구","양천구","은평구","종로구","중구","중랑구"],
     "Amount": [1000,500,100,0,234,764,2436,764,34,87,12,76,235,764,124,7853,14,564,236,764,1348,536,234,546,5271]
 })
-
-# the style arguments for the sidebar. We use position:fixed and a fixed width
-SIDEBAR_STYLE = {
-    "position": "absolute",
-    "top": 0,
-    "left": 0,
-    "bottom": 0,
-    "width": "18rem",
-    "padding": "2rem 1rem",
-    "background-color": "#f8f9fa",
-    "display":"visible",
-    "float":"left",
-}
-
-# the styles for the main content position it to the right of the sidebar and
-# add some padding.
-
 
 
 #서울시 구 데이터 로드
@@ -65,97 +46,98 @@ fig=px.choropleth(df,geojson=geometry,locations='SIG_KOR_NM',color='Amount',
                   color_continuous_scale='Blues',
                   featureidkey='properties.SIG_KOR_NM')
 fig.update_geos(fitbounds="locations",visible=False)
-fig.update_layout(title_text="example",title_font_size=20)
+fig.update_layout(title_text="example",title_font_size=20, width=1100)
 
 #서울시 동 데이터 로드
 dong = json.load(open('./assets/seoul.json',encoding='utf-8'))
+
+
+#2. content
+header = html.Div(
+    children=[
+                html.P(children=html.Img(src="assets\motorcycle.ico", ), className="header_img"),
+                html.H1(children="Zol-zol-zol", className="header_title"),
+                html.P(children="설명~", className="header_description"),
+            ],
+            className='header_box',
+)
+
+dropdown = html.Div(
+    children=[
+        html.Div(
+            children=[
+                html.H4(children='기간 설정',className='dropdown_title'),
+                dcc.DatePickerRange(
+                    id='date-picker-range',
+                    min_date_allowed=date(2000, 1, 1),
+                    max_date_allowed=date(2022, 10, 16),
+                    initial_visible_month=date(2022, 9, 15),
+                    className="dropdown",
+                ),
+            ]
+        ),
+        html.Div(
+            children=[
+                html.H4(children='이동수단 설정',className='menu_title'),
+                dcc.Dropdown(
+                    ['오토바이'], '오토바이', 
+                    id='mobility-dropdown',
+                    style={
+                        'width':"18rem",
+                    },
+                    className="dropdown",
+                ),
+                html.Div(id='dd_mobility'),
+            ]
+        ),],
+    className="dropdown_bg",
+)
+
+
+#3. layout(고정)
+app.layout = html.Div([
+
+    header,
+
+    # represents the browser address bar and doesn't render anything
+    dcc.Location(id='url', refresh=False),
+    
+    # content will be rendered in this element
+    html.Div(id='page-content')
+    #html.Div(id="hidden_div_for_redirect_callback")
+
+])
+
+index_page = html.Div([
+    dropdown,
+    dcc.Graph(id='graph',figure=fig, className='graph'),
+    html.Div(id='index'),
+    print("index")
+])
 
 fig1 = go.Figure(go.Scattermapbox())
 
 
 
 
-
-offcanvas = html.Div([
-    dbc.Button(
-        "open offcanvas",
-        id="open-offcanvas",
-        n_clicks=0
-    ),
-    dbc.Offcanvas(
-        html.P(
-             html.Div([
-                html.H2(children='데이터 셋팅'),
-                html.H3(children='기간 및 이동수단을 설정해주세요.'),
-                html.H4('기간 설정'),
-                dcc.DatePickerRange(
-                    id='date-picker-range',
-                    min_date_allowed=date(2000, 1, 1),
-                    max_date_allowed=date(2022, 10, 16),
-                    initial_visible_month=date(2022, 9, 15),
-                ),
-                html.H4('이동수단 설정'),
-                dcc.Dropdown(
-                    ['오토바이'], '오토바이', 
-                    id='mobility-dropdown',
-                    style={
-                        'width':"18rem",
-                    },),
-                html.Div(id='dd_mobility'),
-                ],
-                style=SIDEBAR_STYLE),
-        ),
-        id="offcanvas",
-        title="title",
-        is_open=False,
-        close_button=True,
-    ),
-])
-
-
-<<<<<<< HEAD
-  
-=======
-
-CONTENT_STYLE = {
-    "margin-left": "20rem",
-    "mragin-right": "2rem",
-    "padding": "2rem 1rem",
-}
-content =  html.Div([   
-    # represents the browser address bar and doesn't render anything
-    dcc.Location(id='url', refresh=False),
-    
-    # content will be rendered in this element
-    html.Div(id='page-content'),
-    #html.Div(id="hidden_div_for_redirect_callback")
-    ],
-    style=CONTENT_STYLE
-)
-
->>>>>>> 6d6fbe8 (offcanvas 사용 코드)
-index_page = html.Div([
-    dcc.Graph(id='graph',figure=fig),
-    html.Div(id='index'),
-    print("index")
-])
-
+#4. function
+#두 번째 페이지 그래프
 def analytics_page(location):
     print(location)
     
     #왼쪽 지도 관련
     features = {"type": "FeatureCollection","features":[i for i in dong['features'] if i['properties']['sggnm']==location]}
     xy=features['features'][0]['geometry']['coordinates'][0][0][5]
-    crime_info = db.select_gu(str(location))
+    #crime_info = db.select_gu(str(location))
     fig1.add_trace(go.Scattermapbox(
-        lat= crime_info['x'] if not crime_info.empty else [],
-        lon=crime_info['y'] if not crime_info.empty else [],
+        #lat= crime_info['x'] if not crime_info.empty else [],
+        #lon=crime_info['y'] if not crime_info.empty else [],
         mode='markers',
         marker=go.scattermapbox.Marker(
             size=14,
             color='rgb(242, 24, 24)'
         ),
-        text=crime_info['location'] if not crime_info.empty else [],
+        #text=crime_info['location'] if not crime_info.empty else [],
     ))
     fig1.update_layout(
             mapbox = {
@@ -167,13 +149,16 @@ def analytics_page(location):
                     'type': "fill", 
                     'below': "traces", 
                     'color': "royalblue"}]},
-            margin = {'l':0, 'r':0, 'b':0, 't':0})        
+            margin = {'l':0, 'r':0, 'b':0, 't':0},
+            clickmode='select')        
+    #fig1.layout.hovermode = 'closest'        
     
     #오른쪽 그래프 관련 수정수정수정하자~~~~~~~~~~~~~~~~
-    fig2 = go.Figure()
-    fig2.add_trace(
-        go.Scatter(x=list(i.time() for i in crime_info['time']),line = dict(color='red'))
-    )     
+    #data= go.Bar(x=list(i.to_pydatetime().day for i in crime_info['time']))
+    #fig2 = go.Figure(data=data)
+    #fig2.add_trace(
+    #     go.Scatter(x=list(i.to_pydatetime().day for i in crime_info['time']),line = dict(color='red'))
+    # )     
     
     return html.Div(id="analytics_page-content",
         children=[
@@ -188,15 +173,19 @@ def analytics_page(location):
                      'height':'150px',
                      'backgroundColor':'#787878'}
                 ),
-        html.Div(id="map",children=[
-            html.Div(),
-            dcc.Graph(id='dong-graph',figure=fig1)],style={'width':"50%","float": "left"}),
+        dcc.Graph(id='dong-graph',figure=fig1,style={'width':"50%","float": "left"}),
         
-        html.Div(id="map",children=[
-            html.Div(),
-            dcc.Graph(id='dong-graph',figure=fig2)],style={'width':"50%","float": "right"})
+        #html.Div(id="map",children=[
+           #   dcc.Graph(id='diverse-graph',figure=fig2)],style={'width':"50%","float": "right"})
     ])
-    
+
+
+def detail_page(detail_location):
+    return html.Div(id="detail_page-content",children=[
+        
+        html.Div("i clieked"+detail_location)
+    ])
+
 @callback(
     Output('url', 'href'),
     Input('city-dropdown', 'value'), prevent_initial_call=True)
@@ -206,8 +195,7 @@ def move_page_dropdown(value):
     if value is not None:    
         return "/"+value
         
-    
-    
+#첫 번째 그래프 클릭 시 상세 그래프로 페이지 이동    
 @callback(
     Output('url', 'pathname'),
     Input('graph', 'clickData'), prevent_initial_call=True)
@@ -218,8 +206,6 @@ def move_page(clickData):
         return "/"+location
     else : return "/"
     
-
-
 @callback(Output('page-content', 'children'),
                Input('url', 'pathname'),prevent_initial_call=True)
 def display_page(pathname):
@@ -244,27 +230,26 @@ def display_page2(href):
 
     return  index_page
 
-@callback(
-    Output("offcanvas","is_open"),
-    [Input("open-offcanvas","n_clicks")],
-    [State("offcanvas","is_open")],
-)
+# def update_point(trace, points, selector):
+#     with fig1.batch_update():
+#         return
 
-<<<<<<< HEAD
+       
+
+@callback(Output("detail_page-content",'chiledren'),
+          Input('dong-graph','clickData'))
+def A(clickData):
+    print("^^"+clickData)
+    return
+    
+
+
+    
 
 
 
 
 
 
-=======
-def toggle_opencanvas(n,is_open):
-    if n:
-        return not is_open
-    return is_open
-
-app.layout = html.Div([offcanvas, content])
-#서버 실행
->>>>>>> 6d6fbe8 (offcanvas 사용 코드)
 if __name__ == '__main__':
     app.run_server(debug=True)
