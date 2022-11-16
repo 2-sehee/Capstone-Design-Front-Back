@@ -116,7 +116,7 @@ def analytics_page(location):
                     html.Div(location),
                     dcc.Dropdown(cities,location,id="city-dropdown",style={'width':"50%","float": "left"}),
                     html.H2("Dashboard",style={"float": "left"})],
-                style={
+                style={ 
                      'height':'150px',
                      'backgroundColor':'#787878'}
                 ),
@@ -214,7 +214,7 @@ def state_hover(feature):
 
 @callback(Output("total_gu_list", "children"),Input("total",'children'))
 def change_total_gu_list(none):
-    return [html.Li(i[0]) for i in db.select_total_gu()[['gu_nm','count']].values.tolist()] 
+    return [html.Li(i[0]) for i in db.select_total_gu(11)[['gu_nm','count']].values.tolist()] 
 
 @callback(Output("today_cnt", "children"),Input("total",'children'))
 def change_today_cnt(none):
