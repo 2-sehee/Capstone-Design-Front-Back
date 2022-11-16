@@ -35,12 +35,8 @@ df = pd.DataFrame({
 def add_marker(gu,dong):
     data = db.select_dong_cctv(gu,dong)
     position = data[['x','y']].values.tolist()
-    print(position)
-    print("^^^^")
-    plus_marker=[]
-    for i in position:
-        plus_marker.append(dl.Marker(position = i))
-    return plus_marker
+    
+    return [dl.Marker(position=i) for i in position]
 
 
 #서울시 구 데이터 로드
@@ -75,6 +71,21 @@ app.layout = html.Div([
 index_page = html.Div([
     dcc.Graph(id='graph',figure=fig),
     html.Div(id='index'),
+    html.Div(id='total',
+        children=[
+            html.H1('총 발생현황'),
+            html.H3('구별 범법행위 순위'),
+            html.Ol(id='total_gu_list', children=[html.Li(i[0]) for i in []]), #db.select_total_gu()[['gu_nm','count']].values.tolist()
+            html.Br(),
+            html.Br(),
+            html.H3('누적 발생 현황'),
+            html.Span('Today   '),
+            html.Span(id='today_cnt',children = ''),
+            html.Br(),
+            html.Span('Total   '),
+            html.Span(id='total_cnt',children = '')
+        ],
+    ),
     print("index")
 ])
 
@@ -86,9 +97,9 @@ def analytics_page(location):
     #왼쪽 지도 관련
     features = {"type": "FeatureCollection","features":[i for i in dong['features'] if i['properties']['sggnm']==location]}
     xy=features['features'][0]['geometry']['coordinates'][0][0][5]
-    geobuf=dlx.geojson_to_geobuf(features)
-    #fig1.layout.hovermode = 'closest'        
+    geobuf=dlx.geojson_to_geobuf(features)  
     crime_info = db.select_gu(location)
+    
     #오른쪽 그래프 관련 수정수정수정하자~~~~~~~~~~~~~~~~
     data= go.Bar(x=list(i.to_pydatetime().day for i in crime_info['time']))
     fig2 = go.Figure(data=data)
@@ -110,8 +121,9 @@ def analytics_page(location):
                      'backgroundColor':'#787878'}
                 ),
         
+        ### 왼쪽 지도 
         html.Div(children=[
-            dl.Map(center=[37.58156996270885,127.01178832759342], zoom=10, 
+            dl.Map(center=[37.58156996270885,127.01178832759342], zoom=12, 
             children=[
                 dl.TileLayer(url=url,attribution=attribution), 
                 dl.GeoJSON(data=features),  # in-memory geojson (slowest option)
@@ -122,7 +134,7 @@ def analytics_page(location):
                         dl.LayerGroup(add_marker('강동구','명일동')), 
                         name="markers", checked=True)]),
                 dl.GeoJSON(data=geobuf, id="states",format="geobuf",zoomToBoundsOnClick=True,hoverStyle=arrow_function(dict(weight=5, color='#666', dashArray=''))),  # geobuf resource (fastest option)
-    ], style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block"}, id="map"),
+                ], style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block"}, id="map"),
             html.Div(id="state"), html.Div(id="capital")],style={'width':"50%","float": "left"}),
         
         
@@ -198,6 +210,20 @@ def capital_click(feature):
 def state_hover(feature):
     if feature is not None:
         return f"{feature['properties']['adm_nm']}"
+    
+
+@callback(Output("total_gu_list", "children"),Input("total",'children'))
+def change_total_gu_list(none):
+    return [html.Li(i[0]) for i in db.select_total_gu()[['gu_nm','count']].values.tolist()] 
+
+@callback(Output("today_cnt", "children"),Input("total",'children'))
+def change_today_cnt(none):
+    return db.select_today()
+
+@callback(Output("total_cnt", "children"),Input("total",'children'))
+def change_today_cnt(none):
+    return db.select_total()
+
 
 
 # def update_point(trace, points, selector):
@@ -206,7 +232,7 @@ def state_hover(feature):
 
        
 
-@callback(Output("detail_page-content",'chiledren'),
+@callback(Output("detail_page-content",'children'),
           Input('dong-graph','clickData'))
 def A(clickData):
     print("^^"+clickData)
