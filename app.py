@@ -33,7 +33,7 @@ df = pd.DataFrame({
 def add_marker(gu,dong):
     data = db.select_dong_cctv(gu,dong)
     position = data[['x','y']].values.tolist()
-    
+    print("!!!!!")
     return [dl.Marker(position=i) for i in position]
 
 
@@ -124,7 +124,7 @@ def analytics_page(location):
         
         ### 왼쪽 지도 
         html.Div(children=[
-            dl.Map(center=[37.58156996270885,127.01178832759342], zoom=12, 
+            dl.Map(id="left_map", zoom=12, 
             children=[
                 dl.TileLayer(url=url,attribution=attribution), 
                 dl.GeoJSON(data=features),  # in-memory geojson (slowest option)
@@ -132,10 +132,10 @@ def analytics_page(location):
                 dl.GeoJSON(data=features, id="capitals"),  # geojson resource (faster than in-memory)
                 dl.LayersControl([
                     dl.Overlay(
-                        dl.LayerGroup(add_marker('강동구','명일동')), 
+                        dl.LayerGroup(id="marker"), 
                         name="markers", checked=True)]),
                 dl.GeoJSON(data=geobuf, id="states",format="geobuf",zoomToBoundsOnClick=True,hoverStyle=arrow_function(dict(weight=5, color='#666', dashArray=''))),  # geobuf resource (fastest option)
-                ], style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block"}, id="map"),
+                ], style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block"}),
             html.Div(id="state"), html.Div(id="capital")],style={'width':"50%","float": "left"}),
         
         ##오른쪽
@@ -200,11 +200,12 @@ def display_page2(href):
     return  index_page
 
 
-
-@callback(Output("capital", "children"), [Input("states", "click_feature")])
+#동 클릭시 CCTV 마커표시
+@callback(Output("marker", "children"), [Input("states", "click_feature")],prevent_initial_call=True)
 def capital_click(feature):
     if feature is not None:
-        return f"You clicked {feature['properties']['adm_nm']}"
+        si,gu,dong = feature['properties']['adm_nm'].split()
+        return add_marker(gu,dong)
 
 
 @callback(Output("state", "children"), [Input("states", "hover_feature")])
@@ -212,6 +213,11 @@ def state_hover(feature):
     if feature is not None:
         return f"{feature['properties']['adm_nm']}"
     
+# @callback(Output("capital", "children"), [Input("marker", "click_feature")])
+# def state_hover(feature):
+#     print(feature)
+#     if feature is not None:
+#         return feature
 
 @callback(Output("total_gu_list", "children"),
           Output("index-graph", "figure"),
@@ -230,8 +236,29 @@ def change_today_cnt(none):
 def change_today_cnt(none):
     return db.select_total()
 
+#왼쪽맵의 초점변경
+@callback(
+    Output("left_map", "center"),
+    Input("city-dropdown",'value'))
+def change_map_center(value):
+    return [37.58156996270885,127.01178832759342]
+    
+
+#오른쪽 그래프 바꾸기
+@callback(Output("right_page", "children"),
+          Input("city-dropdown",'value'),
+          Input("states", "click_feature")
+          ,prevent_initial_call=True
+          )
+def change_right_page(value1,value2):
+    triggered_id = ctx.triggered_id
+    print(triggered_id)
+    if triggered_id == 'city-dropdown':
+        return display_gu_page(value1)
+    elif triggered_id == 'states':
+        return display_dong_page(value2)
+
 #첫번째 페이지 오른쪽
-@callback(Output("right_page", "children"),Input("city-dropdown",'value'))
 def display_gu_page(value):
     dong1 = db.select_stopline(value)
     data= go.Bar(x=dong1['dong_nm'],y=dong1['count'])
@@ -247,7 +274,9 @@ def display_gu_page(value):
         html.Div(id="none",children=[dcc.Graph(id='dong-graph_road_top5',figure=flg2)])
     ]
 
-
+#두번째 페이지 오른쪽
+def display_dong_page(value):
+    return
 
 
 # def update_point(trace, points, selector):
