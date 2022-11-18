@@ -1,5 +1,3 @@
-
-from importlib.resources import path
 from dash import Dash, html, dcc, Input, Output, callback, ctx
 import dash
 import plotly.express as px
@@ -66,7 +64,8 @@ app.layout = html.Div([
 
 ])
 
-
+data= go.Bar(x=[])
+fig3 = go.Figure(data=data)
   
 index_page = html.Div([
     dcc.Graph(id='graph',figure=fig),
@@ -76,6 +75,7 @@ index_page = html.Div([
             html.H1('총 발생현황'),
             html.H3('구별 범법행위 순위'),
             html.Ol(id='total_gu_list', children=[html.Li(i[0]) for i in []]), #db.select_total_gu()[['gu_nm','count']].values.tolist()
+            html.Div(id="map",children=[dcc.Graph(id='index-graph',figure=fig3)],style={'width':"20%","float": "left"}),
             html.Br(),
             html.Br(),
             html.H3('누적 발생 현황'),
@@ -83,7 +83,8 @@ index_page = html.Div([
             html.Span(id='today_cnt',children = ''),
             html.Br(),
             html.Span('Total   '),
-            html.Span(id='total_cnt',children = '')
+            html.Span(id='total_cnt',children = ''),
+
         ],
     ),
     print("index")
@@ -103,7 +104,7 @@ def analytics_page(location):
     #오른쪽 그래프 관련 수정수정수정하자~~~~~~~~~~~~~~~~
     data= go.Bar(x=list(i.to_pydatetime().day for i in crime_info['time']))
     fig2 = go.Figure(data=data)
-    # fig2.add_trace(
+    # fig2.add_trace( 
     #     go.Scatter(x=list(i.to_pydatetime().day for i in crime_info['time']),line = dict(color='red'))
     # )     
     
@@ -137,8 +138,8 @@ def analytics_page(location):
                 ], style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block"}, id="map"),
             html.Div(id="state"), html.Div(id="capital")],style={'width':"50%","float": "left"}),
         
-        
-        html.Div(id="map",children=[
+        ##오른쪽
+        html.Div(id="right_page",children=[
             dcc.Graph(id='diverse-graph',figure=fig2)],style={'width':"50%","float": "right"})
     ])
     
@@ -212,9 +213,14 @@ def state_hover(feature):
         return f"{feature['properties']['adm_nm']}"
     
 
-@callback(Output("total_gu_list", "children"),Input("total",'children'))
+@callback(Output("total_gu_list", "children"),
+          Output("index-graph", "figure"),
+          Input("total",'children'))
 def change_total_gu_list(none):
-    return [html.Li(i[0]) for i in db.select_total_gu(11)[['gu_nm','count']].values.tolist()] 
+    gu = db.select_total_gu(11)
+    data= go.Bar(x=gu['gu_nm'],y=gu['count'])
+    flg = go.Figure(data=data)
+    return [html.Li(i[0]) for i in gu[['gu_nm','count']].values.tolist()],flg
 
 @callback(Output("today_cnt", "children"),Input("total",'children'))
 def change_today_cnt(none):
@@ -224,6 +230,24 @@ def change_today_cnt(none):
 def change_today_cnt(none):
     return db.select_total()
 
+#첫번째 페이지 오른쪽
+@callback(Output("right_page", "children"),Input("city-dropdown",'value'))
+def display_gu_page(value):
+    dong1 = db.select_stopline(value)
+    data= go.Bar(x=dong1['dong_nm'],y=dong1['count'])
+    flg = go.Figure(data=data)
+    
+    dong2 = db.select_road(value)
+    data2= go.Bar(x=dong2['dong_nm'],y=dong2['count'])
+    flg2 = go.Figure(data=data2)
+    
+    return [
+        #일주월 추가
+        html.Div(id="none",children=[dcc.Graph(id='dong-graph_stopline_top5',figure=flg)]),
+        html.Div(id="none",children=[dcc.Graph(id='dong-graph_road_top5',figure=flg2)])
+    ]
+
+
 
 
 # def update_point(trace, points, selector):
@@ -232,11 +256,11 @@ def change_today_cnt(none):
 
        
 
-@callback(Output("detail_page-content",'children'),
-          Input('dong-graph','clickData'))
-def A(clickData):
-    print("^^"+clickData)
-    return
+# @callback(Output("diverse-graph",'figure'),
+#           Input('index-graph','children'))
+# def index_graph(none):
+    
+#     return
     
 
 
