@@ -1,4 +1,4 @@
-from dash import Dash, html, dcc, Input, Output, callback, ctx
+from dash import Dash, html, dcc, Input, Output, callback, ctx, ALL
 import dash
 import plotly.express as px
 import plotly.graph_objects as go
@@ -29,12 +29,6 @@ df = pd.DataFrame({
     "Amount": [1000,500,100,0,234,764,2436,764,34,87,12,76,235,764,124,7853,14,564,236,764,1348,536,234,546,5271]
 })
 
-#마커추가
-def add_marker(gu,dong):
-    data = db.select_dong_cctv(gu,dong)
-    position = data[['x','y']].values.tolist()
-    print("!!!!!")
-    return [dl.Marker(position=i) for i in position]
 
 
 #서울시 구 데이터 로드
@@ -132,7 +126,7 @@ def analytics_page(location):
                 dl.GeoJSON(data=features, id="capitals"),  # geojson resource (faster than in-memory)
                 dl.LayersControl([
                     dl.Overlay(
-                        dl.LayerGroup(id="marker"), 
+                        dl.LayerGroup(id="marker",children=[]), 
                         name="markers", checked=True)]),
                 dl.GeoJSON(data=geobuf, id="states",format="geobuf",zoomToBoundsOnClick=True,hoverStyle=arrow_function(dict(weight=5, color='#666', dashArray=''))),  # geobuf resource (fastest option)
                 ], style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block"}),
@@ -205,7 +199,12 @@ def display_page2(href):
 def capital_click(feature):
     if feature is not None:
         si,gu,dong = feature['properties']['adm_nm'].split()
-        return add_marker(gu,dong)
+        data = db.select_dong_cctv(gu,dong)
+        position = data[['id','x','y']].values.tolist()
+        return [dl.Marker(id=dict(tag="mark", index=position[i][0])
+                          ,position=[position[i][1],position[i][2]]) for i in range(len(position))]
+
+        
 
 
 @callback(Output("state", "children"), [Input("states", "hover_feature")])
@@ -247,16 +246,30 @@ def change_map_center(value):
 #오른쪽 그래프 바꾸기
 @callback(Output("right_page", "children"),
           Input("city-dropdown",'value'),
-          Input("states", "click_feature")
+          Input("states", "click_feature"),
+          Input(dict(tag="mark", index=ALL), "n_clicks")
           ,prevent_initial_call=True
           )
-def change_right_page(value1,value2):
+def change_right_page(value1,value2,value3):
     triggered_id = ctx.triggered_id
     print(triggered_id)
+    print(dash.callback_context.triggered)
+    print(value3)
+    
     if triggered_id == 'city-dropdown':
         return display_gu_page(value1)
     elif triggered_id == 'states':
         return display_dong_page(value2)
+    else:
+        k = dash.callback_context.triggered[0]['value']
+        if k is not None: #triggered_id['tag'] == 'mark'
+            print("^^")        
+            return display_cctv_page(k)
+        
+    
+        
+    
+    
 
 #첫번째 페이지 오른쪽
 def display_gu_page(value):
@@ -277,6 +290,21 @@ def display_gu_page(value):
 #두번째 페이지 오른쪽
 def display_dong_page(value):
     return
+
+#세번째 페이지 오른쪽
+def display_cctv_page(value):
+    data = db.select_cctv(value)
+    crime = ['정지선 위반', '보행자 도로 위반']
+
+    return [
+        #html.Div(data[data[i]] for i in crime),  [html.Li(i[0]) for i in gu[['gu_nm','count']].values.tolist()],flg
+        html.Ul(id='cctv_list', children = [
+                html.Li(id='crime_list',children=[ 
+                                   i,
+                                   html.Ul(children=[
+                                           html.Li(j[3]) for j in data[data['type']==i].values.tolist()])
+                                    ]) for i in crime ]) 
+    ]
 
 
 # def update_point(trace, points, selector):
