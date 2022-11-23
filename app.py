@@ -1,4 +1,4 @@
-from dash import Dash, html, dcc, Input, Output, callback, ctx, ALL
+from dash import Dash, html, dcc, Input, Output, callback, ctx, ALL, no_update
 import dash
 import plotly.express as px
 import plotly.graph_objects as go
@@ -9,6 +9,7 @@ from datetime import timedelta, date
 import dash_leaflet as dl
 import dash_leaflet.express as dlx
 from dash_extensions.javascript import arrow_function
+import dash_bootstrap_components as dbc
 
 
 #두번쨰페이지 지도 소스
@@ -29,6 +30,8 @@ df = pd.DataFrame({
     "Amount": [1000,500,100,0,234,764,2436,764,34,87,12,76,235,764,124,7853,14,564,236,764,1348,536,234,546,5271]
 })
 
+#추이 그래프를 위한 임시 데이터
+data1=pd.read_csv('assets\data1.csv')
 
 
 #서울시 구 데이터 로드
@@ -134,7 +137,8 @@ def analytics_page(location):
         
         ##오른쪽
         html.Div(id="right_page",children=[
-            dcc.Graph(id='diverse-graph',figure=fig2)],style={'width':"50%","float": "right"})
+            graph_layout()],style = {'width':'50%','float':'right'}),
+        
     ])
     
     
@@ -212,11 +216,7 @@ def state_hover(feature):
     if feature is not None:
         return f"{feature['properties']['adm_nm']}"
     
-# @callback(Output("capital", "children"), [Input("marker", "click_feature")])
-# def state_hover(feature):
-#     print(feature)
-#     if feature is not None:
-#         return feature
+
 
 @callback(Output("total_gu_list", "children"),
           Output("index-graph", "figure"),
@@ -261,10 +261,12 @@ def change_right_page(value1,value2,value3):
     elif triggered_id == 'states':
         return display_dong_page(value2)
     else:
-        k = dash.callback_context.triggered[0]['value']
-        if k is not None: #triggered_id['tag'] == 'mark'
+        k = dash.callback_context.triggered
+        if k[0]['value'] is not None and len(k)==1: #triggered_id['tag'] == 'mark'
             print("^^")        
-            return display_cctv_page(k)
+            return display_cctv_page(k[0]['value'])
+        else:
+            return no_update
         
     
         
@@ -282,14 +284,17 @@ def display_gu_page(value):
     flg2 = go.Figure(data=data2)
     
     return [
-        #일주월 추가
+        graph_layout(),
         html.Div(id="none",children=[dcc.Graph(id='dong-graph_stopline_top5',figure=flg)]),
         html.Div(id="none",children=[dcc.Graph(id='dong-graph_road_top5',figure=flg2)])
     ]
 
 #두번째 페이지 오른쪽
 def display_dong_page(value):
-    return
+    print("??????")
+    return [
+        graph_layout()
+    ]
 
 #세번째 페이지 오른쪽
 def display_cctv_page(value):
@@ -297,7 +302,7 @@ def display_cctv_page(value):
     crime = ['정지선 위반', '보행자 도로 위반']
 
     return [
-        #html.Div(data[data[i]] for i in crime),  [html.Li(i[0]) for i in gu[['gu_nm','count']].values.tolist()],flg
+        graph_layout(),
         html.Ul(id='cctv_list', children = [
                 html.Li(id='crime_list',children=[ 
                                    i,
@@ -307,22 +312,103 @@ def display_cctv_page(value):
     ]
 
 
-# def update_point(trace, points, selector):
-#     with fig1.batch_update():
-#         return
+#추이 그래프
+@callback(
+    Output("analytics", "figure"),
+    [Input("display_figure", "value"),
+    ],
+)
+def make_graph(display_figure):
 
-       
+    # main trace
+    print(display_figure)
+    # if 'Nope' in display_figure:
+    #     fig = go.Figure()
+    #     fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
+    #                       yaxis = dict(showgrid=False, zeroline=False, tickfont = dict(color = 'rgba(0,0,0,0)')),
+    #                       xaxis = dict(showgrid=False, zeroline=False, tickfont = dict(color = 'rgba(0,0,0,0)')))
+    #     return fig
 
-# @callback(Output("diverse-graph",'figure'),
-#           Input('index-graph','children'))
-# def index_graph(none):
+    if '일간 통계' in display_figure:
+        fig = go.Figure(go.Scatter(x=data1['date'], y=data1['case1'],
+                mode='lines+markers', name='횡단보도 주행 위반'))
+        fig.add_traces(go.Scatter(x=data1['date'], y=data1['case2'],
+                mode='lines+markers', name='보행자도로 통행 위반'))
+        fig.update_layout(template='plotly_dark')
+
+    # prediction trace
+    if '주간 통계' in display_figure:
+        fig = go.Figure(go.Scatter(x=data1['date'], y=data1['case1'],
+                mode='lines+markers', name='횡단보도 주행 위반'))
+        fig.add_traces(go.Scatter(x=data1['date'], y=data1['case2'],
+                mode='lines+markers', name='보행자도로 통행 위반'))
+        fig.update_layout(template='seaborn')
+
+    if '월간 통계' in display_figure:
+        fig = go.Figure(go.Scatter(x=data1['date'], y=data1['case1'],
+                mode='lines+markers', name='횡단보도 주행 위반'))
+        fig.add_traces(go.Scatter(x=data1['date'], y=data1['case2'],
+                mode='lines+markers', name='보행자도로 통행 위반'))
+        fig.update_layout(template='plotly_white')
+
+    # Aesthetics
+    fig.update_layout(margin= {'t':50, 'b':0, 'r': 0, 'l': 0, 'pad': 0})
+    #fig.update_layout(hovermode = 'x')
+    #fig.update_layout(showlegend=True, legend=dict(x=1,y=0.85))
+    fig.update_layout(uirevision='constant')
+    fig.update_layout(title='<b>월별 범법행위 발생 추이')
+
+    return(fig)
+
+
+def graph_layout():
+    controls = html.Div(
+    children=[
+        dbc.Card(
+            [dbc.Col(
+                    [
+                        #dbc.Label("Options"),
+                        dcc.RadioItems(id="display_figure", 
+                        options=[
+                                {'label': '일간 통계', 'value': '일간 통계'},
+                                {'label': '주간 통계', 'value': '주간 통계'},
+                                {'label': '월간 통계', 'value': '월간 통계'}
+                            ],
+                        value='일간 통계',
+                        labelStyle={'display': 'inline-block', 'width': '10em', 'line-height':'0.5em'}
+                        ) 
+                    ], 
+                ),
+                dbc.Col(
+                    [dbc.Label(""),]
+                ),
+            ],
+            body=True,
+            style = {'font-size': 'large'}),],
+            className='controls',
+    )
+    return html.Div(
+        children=[
+            dbc.Container([
+                html.H1("범법행위 발생 추이"),
+            html.Hr(),
+            dbc.Row([
+                dbc.Col([controls],xs = 4), #여기서 xs가 뭐지?
+                dbc.Col([
+                    dbc.Row([
+                        dbc.Col(dcc.Graph(id="analytics")),
+                    ])
+                ]),
+            ]),
+            html.Br(),
+            dbc.Row([
     
-#     return
+            ]), 
+        ],
+        fluid=True,)
+    ],
+    className='container',)
     
-
-
-    
-
 
 
 
