@@ -137,7 +137,7 @@ def analytics_page(location):
         
         ##오른쪽
         html.Div(id="right_page",children=[
-            graph_layout()],style = {'width':'50%','float':'right'}),
+            ],style = {'width':'50%','float':'right'}),
         
     ])
     
@@ -158,6 +158,7 @@ def move_page_dropdown(value):
     print(value)
     if value is not None:    
         return "/"+value
+    return no_update
         
     
     
@@ -195,7 +196,7 @@ def display_page2(href):
         if href=="/"+city:
             return analytics_page(city)
 
-    return  index_page
+    return  no_update
 
 
 #동 클릭시 CCTV 마커표시
@@ -240,15 +241,16 @@ def change_today_cnt(none):
     Output("left_map", "center"),
     Input("city-dropdown",'value'))
 def change_map_center(value):
-    return [37.58156996270885,127.01178832759342]
+    center = {"광진구":[37.545059,127.085334],"강동구":[37.5488426,127.1471646],"성동구":[37.553761,127.040564],"강남구":[37.495534,127.063303],"강서구":[37.560584,126.823248],"강북구":[37.643249,127.011323],"관악구":[37.467109,126.945020],"구로구":[37.494210,126.856663],"금천구":[37.460393,126.900460],"노원구":[37.651773,127.074682],"동대문구":[37.581575,127.054693],"도봉구":[37.668849,127.032367],"동작구":[37.498399,126.950762],"마포구":[37.559235,126.908165],"서대문구":[37.577460,126.939250],"성북구":[37.605515,127.017753],"서초구":[37.473553,127.031060],"송파구":[37.505350,127.115259],"영등포구":[37.522020,126.910389],"용산구":[37.531202,126.979884],"양천구":[37.524491,126.855483],"은평구":[37.618588,126.927385],"종로구":[37.594335,126.976226],"중구":[37.559865,126.995855],"중랑구":[37.596661,127.092716]}
+    return center[value]
     
 
 #오른쪽 그래프 바꾸기
 @callback(Output("right_page", "children"),
           Input("city-dropdown",'value'),
           Input("states", "click_feature"),
-          Input(dict(tag="mark", index=ALL), "n_clicks")
-          ,prevent_initial_call=True
+          Input(dict(tag="mark", index=ALL), "n_clicks"),
+          prevent_initial_call=True
           )
 def change_right_page(value1,value2,value3):
     triggered_id = ctx.triggered_id
@@ -257,8 +259,10 @@ def change_right_page(value1,value2,value3):
     print(value3)
     
     if triggered_id == 'city-dropdown':
+        print("1")
         return display_gu_page(value1)
     elif triggered_id == 'states':
+        print("2")
         return display_dong_page(value2)
     else:
         k = dash.callback_context.triggered
@@ -266,6 +270,7 @@ def change_right_page(value1,value2,value3):
             print("^^")        
             return display_cctv_page(k[0]['value'])
         else:
+            print("4")
             return no_update
         
     
