@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from dash import Dash, html, dcc, Input, Output, callback, ctx, ALL, no_update
 import dash
 import plotly.express as px
@@ -96,14 +97,7 @@ def analytics_page(location):
     features = {"type": "FeatureCollection","features":[i for i in dong['features'] if i['properties']['sggnm']==location]}
     xy=features['features'][0]['geometry']['coordinates'][0][0][5]
     geobuf=dlx.geojson_to_geobuf(features)  
-    crime_info = db.select_gu(location)
-    
-    #오른쪽 그래프 관련 수정수정수정하자~~~~~~~~~~~~~~~~
-    data= go.Bar(x=list(i.to_pydatetime().day for i in crime_info['time']))
-    fig2 = go.Figure(data=data)
-    # fig2.add_trace( 
-    #     go.Scatter(x=list(i.to_pydatetime().day for i in crime_info['time']),line = dict(color='red'))
-    # )     
+      
     
     return html.Div(id="analytics_page-content",
         children=[
@@ -136,8 +130,7 @@ def analytics_page(location):
             html.Div(id="state"), html.Div(id="capital")],style={'width':"50%","float": "left"}),
         
         ##오른쪽
-        html.Div(id="right_page",children=[
-            ],style = {'width':'50%','float':'right'}),
+        html.Div(id="right_page",children=display_gu_page(location),style = {'width':'50%','float':'right'}),
         
     ])
     
@@ -256,19 +249,22 @@ def change_right_page(value1,value2,value3):
     triggered_id = ctx.triggered_id
     print(triggered_id)
     print(dash.callback_context.triggered)
-    print(value3)
+    
     
     if triggered_id == 'city-dropdown':
         print("1")
+        print(value1) #ex) 강남구
         return display_gu_page(value1)
     elif triggered_id == 'states':
         print("2")
-        return display_dong_page(value2)
+        print(value2) #ex) 'properties': {'OBJECTID': 378, 'adm_nm': '서울특별시 강남구 대치2동'
+        return display_dong_page(value2['properties']['adm_nm'])
     else:
-        k = dash.callback_context.triggered
+        k = dash.callback_context.triggered #ex)[{'prop_id': '{"index":"C000893","tag":"mark"}.n_clicks', 'value': 1}]
         if k[0]['value'] is not None and len(k)==1: #triggered_id['tag'] == 'mark'
             print("^^")        
-            return display_cctv_page(k[0]['value'])
+        
+            return display_cctv_page(triggered_id['index'])
         else:
             print("4")
             return no_update
@@ -289,7 +285,7 @@ def display_gu_page(value):
     flg2 = go.Figure(data=data2)
     
     return [
-        graph_layout(),
+        graph_layout([1,value]),
         html.Div(id="none",children=[dcc.Graph(id='dong-graph_stopline_top5',figure=flg)]),
         html.Div(id="none",children=[dcc.Graph(id='dong-graph_road_top5',figure=flg2)])
     ]
@@ -298,23 +294,28 @@ def display_gu_page(value):
 def display_dong_page(value):
     print("??????")
     return [
-        graph_layout()
+        graph_layout([2,value])
     ]
 
 #세번째 페이지 오른쪽
 def display_cctv_page(value):
-    data = db.select_cctv(value)
     crime = ['정지선 위반', '보행자 도로 위반']
+    data = db.select_cctv(value,crime[0])
+    data1 = db.select_cctv(value,crime[1])
+    
 
     return [
-        graph_layout(),
-        html.Ul(id='cctv_list', children = [
-                html.Li(id='crime_list',children=[ 
-                                   i,
-                                   html.Ul(children=[
-                                           html.Li(j[3]) for j in data[data['type']==i].values.tolist()])
-                                    ]) for i in crime ]) 
+        graph_cctv_layout([3,value]),
+        
     ]
+
+
+# html.Ul(id='cctv_list', children = [
+#                 html.Li(id='crime_list',children=[ 
+#                                    i,
+#                                    html.Ul(children=[
+#                                            html.Li(j[3]) for j in data[data['type']==i].values.tolist()])
+#                                     ]) for i in crime ]) 
 
 
 #추이 그래프
@@ -323,50 +324,96 @@ def display_cctv_page(value):
     [Input("display_figure", "value"),
     ],
 )
-def make_graph(display_figure):
+def make_graph(value):
+    value = json.loads(value)
+    print(value) #ex)['일간통계',[1,value값]]
 
-    # main trace
-    print(display_figure)
-    # if 'Nope' in display_figure:
-    #     fig = go.Figure()
-    #     fig.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)',
-    #                       yaxis = dict(showgrid=False, zeroline=False, tickfont = dict(color = 'rgba(0,0,0,0)')),
-    #                       xaxis = dict(showgrid=False, zeroline=False, tickfont = dict(color = 'rgba(0,0,0,0)')))
-    #     return fig
+    if value[1][0] == 1: #구통계
+        data1 = db.select_gu(value[1][1],"정지선 위반")
+        if not data1.empty :
+            data1['time'] = pd.to_datetime(data1['time'].dt.date)
+        
+        data2 = db.select_gu(value[1][1],"보행자 도로 위반")
+        if not data2.empty:
+            data2['time'] = pd.to_datetime(data2['time'].dt.date)
+            
+    elif value[1][0] ==2 : #동통계
+        si,gu,dong = value[1][1].split()
+        
+        data1 = db.select_gu_dong(gu,dong,"정지선 위반")
+        if not data1.empty :
+            data1['time'] = pd.to_datetime(data1['time'].dt.date)
+        
+        data2 = db.select_gu_dong(gu,dong,"보행자 도로 위반")
+        if not data2.empty :
+            data2['time'] = pd.to_datetime(data2['time'].dt.date)
+        
+        
+        
 
-    if '일간 통계' in display_figure:
-        fig = go.Figure(go.Scatter(x=data1['date'], y=data1['case1'],
-                mode='lines+markers', name='횡단보도 주행 위반'))
-        fig.add_traces(go.Scatter(x=data1['date'], y=data1['case2'],
-                mode='lines+markers', name='보행자도로 통행 위반'))
+    if '일간 통계' in value[0]:
+        if not data1.empty :
+            data1=data1.groupby('time').sum()
+            data1 = data1.reset_index(drop=False)
+        if not data2.empty:
+            data2=data2.groupby('time').sum()
+            data2 = data2.reset_index(drop=False)
+        fig = go.Figure(go.Scatter(x=data1['time'], y=data1['crime_cnt'],
+                mode='lines+markers', name='정지선 위반'))
+        fig.add_traces(go.Scatter(x=data2['time'], y=data2['crime_cnt'],
+                mode='lines+markers', name='보행자 도로 위반'))
         fig.update_layout(template='plotly_dark')
 
-    # prediction trace
-    if '주간 통계' in display_figure:
-        fig = go.Figure(go.Scatter(x=data1['date'], y=data1['case1'],
-                mode='lines+markers', name='횡단보도 주행 위반'))
-        fig.add_traces(go.Scatter(x=data1['date'], y=data1['case2'],
+    
+    if '주간 통계' in value[0]:
+        if not data1.empty :
+            data1 = data1.resample(rule='1W', on='time').sum()
+            data1 = data1.reset_index(drop=False)
+        if not data2.empty:
+            data2 = data2.resample(rule='1W', on='time').sum()        
+            data2 = data2.reset_index(drop=False)
+            
+        fig = go.Figure(go.Scatter(x=data1['time'], y=data1['crime_cnt'],
+                mode='lines+markers', name='정지선 위반'))
+        fig.add_traces(go.Scatter(x=data2['time'], y=data2['crime_cnt'],
                 mode='lines+markers', name='보행자도로 통행 위반'))
         fig.update_layout(template='seaborn')
 
-    if '월간 통계' in display_figure:
-        fig = go.Figure(go.Scatter(x=data1['date'], y=data1['case1'],
-                mode='lines+markers', name='횡단보도 주행 위반'))
-        fig.add_traces(go.Scatter(x=data1['date'], y=data1['case2'],
+    if '월간 통계' in value[0]:
+        if not data1.empty:
+            data1 = data1.resample(rule='1M', on='time').sum()
+            data1 = data1.reset_index(drop=False)
+            data1['time']= data1['time'].dt.month
+        
+        if not data2.empty:
+            data2 = data2.resample(rule='1M', on='time').sum()
+            data2 = data2.reset_index(drop=False)
+            data2['time']= data2['time'].dt.month
+        
+        
+        fig = go.Figure(go.Scatter(x=data1['time'], y=data1['crime_cnt'],
+                mode='lines+markers', name='정지선 위반'))
+        fig.add_traces(go.Scatter(x=data1['time'], y=data1['crime_cnt'],
                 mode='lines+markers', name='보행자도로 통행 위반'))
         fig.update_layout(template='plotly_white')
 
+    
+    
+    
     # Aesthetics
     fig.update_layout(margin= {'t':50, 'b':0, 'r': 0, 'l': 0, 'pad': 0})
     #fig.update_layout(hovermode = 'x')
     #fig.update_layout(showlegend=True, legend=dict(x=1,y=0.85))
     fig.update_layout(uirevision='constant')
-    fig.update_layout(title='<b>월별 범법행위 발생 추이')
+    fig.update_layout(title='<b>범법행위 발생 추이')
 
     return(fig)
 
 
-def graph_layout():
+
+
+def graph_layout(value):
+    
     controls = html.Div(
     children=[
         dbc.Card(
@@ -375,11 +422,11 @@ def graph_layout():
                         #dbc.Label("Options"),
                         dcc.RadioItems(id="display_figure", 
                         options=[
-                                {'label': '일간 통계', 'value': '일간 통계'},
-                                {'label': '주간 통계', 'value': '주간 통계'},
-                                {'label': '월간 통계', 'value': '월간 통계'}
+                                {'label': '일간 통계', 'value': json.dumps(['일간 통계',value])},
+                                {'label': '주간 통계', 'value': json.dumps(['주간 통계',value])},
+                                {'label': '월간 통계', 'value': json.dumps(['월간 통계',value])}
                             ],
-                        value='일간 통계',
+                        value=json.dumps(['일간 통계',value]),
                         labelStyle={'display': 'inline-block', 'width': '10em', 'line-height':'0.5em'}
                         ) 
                     ], 
@@ -402,6 +449,90 @@ def graph_layout():
                 dbc.Col([
                     dbc.Row([
                         dbc.Col(dcc.Graph(id="analytics")),
+                    ])
+                ]),
+            ]),
+            html.Br(),
+            dbc.Row([
+    
+            ]), 
+        ],
+        fluid=True,)
+    ],
+    className='container',)
+    
+
+@callback(
+    Output("cctv_analytics", "figure"),
+    [Input("display_cctv_figure", "value"),
+    ],
+)
+def make_cctv_graph(value):
+    value = json.loads(value)
+    data1 = db.select_cctv(value[1][1],"정지선 위반")
+    data2 = db.select_cctv(value[1][1],"보행자 도로 위반")
+
+    if not data1.empty :
+        data1['time'] = pd.to_datetime(data1['time'].dt.date)
+        
+    
+    if not data2.empty:
+        data2['time'] = pd.to_datetime(data2['time'].dt.date)
+        
+        
+    if '주간 통계' in value[0]:
+        if not data1.empty :
+            data1 = data1.resample(rule='1W', on='time').sum()
+            data1 = data1.reset_index(drop=False)
+        if not data2.empty:
+            data2 = data2.resample(rule='1W', on='time').sum()        
+            data2 = data2.reset_index(drop=False)
+            
+        fig = go.Figure(go.Scatter(x=data1['time'], y=data1['crime_cnt'],
+                mode='lines+markers', name='정지선 위반'))
+        fig.add_traces(go.Scatter(x=data2['time'], y=data2['crime_cnt'],
+                mode='lines+markers', name='보행자도로 통행 위반'))
+        fig.update_layout(template='seaborn')
+        
+    fig.update_layout(margin= {'t':50, 'b':0, 'r': 0, 'l': 0, 'pad': 0})
+    fig.update_layout(uirevision='constant')
+    fig.update_layout(title='<b>범법행위 발생 추이')
+    
+    return(fig)
+    
+    
+def graph_cctv_layout(value):
+    
+    controls = html.Div(
+    children=[
+        dbc.Card(
+            [dbc.Col(
+                    [
+                        #dbc.Label("Options"),
+                        dcc.RadioItems(id="display_cctv_figure", 
+                        value=json.dumps(['주간 통계',value]),
+                        labelStyle={'display': 'inline-block', 'width': '10em', 'line-height':'0.5em'}
+                        ) 
+                    ], 
+                ),
+                dbc.Col(
+                    [dbc.Label(""),]
+                ),
+            ],
+            body=True,
+            style = {'font-size': 'large'}),],
+            className='controls',
+    )
+    return html.Div(
+        children=[
+            dbc.Container([
+                html.H1("범법행위 발생 추이"),
+            html.Hr(),
+            dbc.Row([
+                dbc.Col([controls],xs = 4), 
+                dbc.Col([
+                    dbc.Row([
+                        dbc.Col(dcc.Graph(id="cctv_analytics")),
                     ])
                 ]),
             ]),
