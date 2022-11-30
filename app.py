@@ -26,20 +26,18 @@ cities=["광진구","강동구","성동구","강남구","강서구","강북구",
 
 
 #임시데이터
-df = pd.DataFrame({
-    "SIG_KOR_NM": ["광진구","강동구","성동구","강남구","강서구","강북구","관악구","구로구","금천구","노원구","동대문구","도봉구","동작구","마포구","서대문구","성북구","서초구","송파구","영등포구","용산구","양천구","은평구","종로구","중구","중랑구"],
-    "Amount": [1000,500,100,0,234,764,2436,764,34,87,12,76,235,764,124,7853,14,564,236,764,1348,536,234,546,5271]
-})
-
-#추이 그래프를 위한 임시 데이터
-data1=pd.read_csv('assets\data1.csv')
+df = db.select_total_cnt_gu(11)
+for i in cities:
+    if i not in df['gu_nm'].values.tolist():
+        df = pd.concat([df,pd.DataFrame({'gu_nm':[i],'count':[0]})],ignore_index=True)
+        
 
 
 #서울시 구 데이터 로드
 geometry = json.load(open('./assets/TL_SCCO_SIG.json',encoding='utf-8'))
 
 #Choropleth 시각화 -> 추후 SIG_KOR_NM column 을 누구나 알아볼 수 있게 바꿀예정(ex.city)
-fig=px.choropleth(df,geojson=geometry,locations='SIG_KOR_NM',color='Amount',
+fig=px.choropleth(df,geojson=geometry,locations='gu_nm',color='count',
                   color_continuous_scale='Blues',
                   featureidkey='properties.SIG_KOR_NM')
 fig.update_geos(fitbounds="locations",visible=False)
@@ -173,7 +171,7 @@ def display_page(pathname):
     print("display")
     
     print(pathname)
-    for city in df['SIG_KOR_NM']:
+    for city in cities:
         if pathname == '/'+city :
             return analytics_page(city)
 
@@ -185,7 +183,7 @@ def display_page2(href):
     print("display2")
     print(href)
     
-    for city in df['SIG_KOR_NM']:
+    for city in cities:
         if href=="/"+city:
             return analytics_page(city)
 
