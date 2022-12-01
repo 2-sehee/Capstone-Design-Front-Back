@@ -26,7 +26,7 @@ cities=["광진구","강동구","성동구","강남구","강서구","강북구",
 
 
 #임시데이터
-df = db.select_total_cnt_gu(11)
+df = db.select_total_cnt_gu(12)
 for i in cities:
     if i not in df['gu_nm'].values.tolist():
         df = pd.concat([df,pd.DataFrame({'gu_nm':[i],'count':[0]})],ignore_index=True)
@@ -41,10 +41,14 @@ fig=px.choropleth(df,geojson=geometry,locations='gu_nm',color='count',
                   color_continuous_scale='Blues',
                   featureidkey='properties.SIG_KOR_NM')
 fig.update_geos(fitbounds="locations",visible=False)
-fig.update_layout(title_text="example",title_font_size=20)
+fig.update_layout(title_text="example",title_font_size=20,paper_bgcolor='#F5F7FA')
 
 #서울시 동 데이터 로드
 dong = json.load(open('./assets/seoul.json',encoding='utf-8'))
+
+
+
+
 
 
 app.layout = html.Div([
@@ -214,7 +218,7 @@ def state_hover(feature):
           Output("index-graph", "figure"),
           Input("total",'children'))
 def change_total_gu_list(none):
-    gu = db.select_total_gu(11)
+    gu = db.select_total_gu(12)
     data= go.Bar(x=gu['gu_nm'],y=gu['count'])
     flg = go.Figure(data=data)
     return [html.Li(i[0]) for i in gu[['gu_nm','count']].values.tolist()],flg
