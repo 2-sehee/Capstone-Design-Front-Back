@@ -1,0 +1,268 @@
+/*스타일 설정을 위한 css file*/
+
+/*page 1*/
+.font{
+    color: white;
+    text-align: center;
+}
+.sidebar{
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom : 0;
+    width: 13%;
+    /*padding: 2rem 1rem;*/
+    background-color: #222834;
+    display: visible;
+    text-decoration-color: white;
+}
+
+/*헤더 아이콘(오토바이)*/
+.header_img {
+    
+    margin: 0 auto;
+    text-align: center;
+}
+
+/*헤더 타이틀 (Zol-zol-zol)*/
+.header_title {
+    color: #c2c2c2;
+    font-size: 30px;
+    font-weight: bold;
+    text-align: center;
+    margin: 0 auto;
+    font-family: Georgia, Serif;
+}
+
+/*헤더 부제목 (설명~)*/
+.header_description {
+    color: #CFCFCF;
+    margin: 4px auto;
+    text-align: center;
+    max-width: 384px;
+}
+
+/*헤더 bg box*/
+.header_box {
+    background-color: #ffffff;
+    height: 70px;
+    width: 87%;
+    float: right;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    
+}
+
+/*데이터 셋팅 제목(기간 설정, 이동수단 설정)*/
+.dropdown_title {
+    margin-bottom: 6px;
+    display: flex;
+    font-weight: bold;
+    color: #070b1d ;
+}
+
+/*데이터 셋팅 박스 설명인데 안씀
+.menu_discription {
+    height: 100px;
+    max-width: 1200px;
+    display: flex;
+    justify-content: space-evenly; /*아이템 사이 균일한 간격
+    padding-top: 32px;
+    margin: 0px auto 0 auto;
+    background-color: #FFFFFF;
+    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.18);
+    
+}*/
+
+/*데이터 셋팅 bg box, 
+fade_btn이 구현되면 이 부분이 fade부분이 됨*/
+.dropdown_bg {
+    height: 112px;
+    width: 75%;
+    display: flex;
+    float : left;
+    justify-content: space-evenly;
+    padding-top: 5px;
+    margin: 0px auto 0 auto;
+    background-color: #f0f9ff;
+    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.18);
+}
+
+/*지도 display bg box*/
+.layoutbox {
+    background-color: #F5F7FA;
+    width: 87%;
+    height: 830px;
+    float: right;
+    position: relative;
+    border-top: 2px solid rgba(92, 91, 91, 0.384);
+    /*border-bottom: 2px solid rgba(92, 91, 91, 0.384);*/
+}
+
+.index_hr1{
+    width: 60%;
+    color: 1px solid rgba(128, 128, 128, 0.301);
+    margin-top: 160px;
+    float: left;
+    padding-left: 10px;
+}
+
+.index_text1{
+    margin-left: 45px;
+    margin-top: 3%;
+    display: inline-block;
+}
+.index_text1box{
+    float: left;
+    width: 25%;
+    height: 60px;
+    background-color:#F5F7FA;
+    border-left: 6px solid #3874FF;
+    border-radius: 0px;
+    margin-left: 45px;
+    margin-top: 3%;
+    
+}
+.dropdown_date{
+    width: 55%;
+    padding-left: 40%;   
+    display: inline-block;
+    padding-top: 13px;
+    
+}
+
+/*index_page graph*/
+.graph {
+    /*background-color: white;*/
+    height: 65%;
+    width: 55%;
+    display: flex;
+    float: left;
+    position: absolute;
+    bottom: 140px;
+    padding-top: 10px;
+    margin-left: 10px;
+    /*border: 5px solid white;
+    border-radius: 20px;*/
+
+    
+}
+
+.index_text3{
+    margin-top: 530px;
+    margin-left: 100px;
+}
+.city_top5{
+    margin-top: 20px;
+    margin-left: 100px;
+    margin: 30px;
+}
+ol li{
+    display: inline-block; 
+    margin-left : 20px;
+}
+
+.today_idx{
+    font-size: larger;
+    padding-left: 10%;
+}
+.today_cnt{
+    font-size: large;
+    padding-left: 10%;
+}
+.todaybox{
+    float: right;
+    width: 15%;
+    height: 55px;
+    background-color:#F5F7FA;
+    border-left: 6px solid #3874FF;
+    border-radius: 0px;
+    margin-right: 3%;
+    margin-top: 3%;
+    
+}
+.total_idx{
+    font-size: larger;
+    padding-left: 10%;
+
+}
+.total_cnt{
+    font-size: large;
+    padding-left: 10%;
+}
+
+.totalbox{
+    float: right;
+    width: 15%;
+    height: 55px;
+    background-color:#F5F7FA;
+    border-left: 6px solid #3874FF;
+    border-radius: 0px;
+    margin-right: 6%;
+    margin-top: 3%;
+}
+
+.index-graph_box{
+    float: right;
+    width: 35%;
+    background-color: white;
+    margin-right: 6%;
+    flex-direction: column;
+    margin-top: -10px;
+}
+.index-graph_people{
+    
+    margin-bottom: -30px;
+    background-color: white;
+   
+    /*border: 5px solid white;
+    border-radius: 20px;
+    box-shadow: 1px 1px 1px 1px rgb(184, 183, 183);*/
+}
+.index-graph_stopline{
+    
+    
+    background-color: white;
+    
+    /*border: 5px solid white;
+    border-radius: 20px;
+    box-shadow: 1px 1px 1px 1px rgb(184, 183, 183);*/
+}
+
+
+
+/*page 2*/
+
+/*두 번째 페이지 구 dropdown bg*/
+.location{
+    margin-left: 3%;
+    margin-top: 50px;
+    display: inline-block;
+}
+.location_text{
+    margin-left: 5px;
+    margin-top: 50px;
+    display: inline-block;
+}
+.analytics_page-content {
+    height: 150px;
+    background-color: #f0f9ff;
+}
+
+.city-dropdown{
+    width: 15%;
+    margin-left: 33%;   
+    display: inline-block;
+    padding-top: 0px;
+}
+.right_page{
+    width: 40%;
+    float: right;
+    margin-right: 5%;
+}
+
+
+
+
+

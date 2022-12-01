@@ -24,24 +24,12 @@ app = Dash(__name__,suppress_callback_exceptions=True)
 
 cities=["광진구","강동구","성동구","강남구","강서구","강북구","관악구","구로구","금천구","노원구","동대문구","도봉구","동작구","마포구","서대문구","성북구","서초구","송파구","영등포구","용산구","양천구","은평구","종로구","중구","중랑구"]
 
-
-#임시데이터
-df = db.select_total_cnt_gu(12)
-for i in cities:
-    if i not in df['gu_nm'].values.tolist():
-        df = pd.concat([df,pd.DataFrame({'gu_nm':[i],'count':[0]})],ignore_index=True)
         
-
 
 #서울시 구 데이터 로드
 geometry = json.load(open('./assets/TL_SCCO_SIG.json',encoding='utf-8'))
 
-#Choropleth 시각화 -> 추후 SIG_KOR_NM column 을 누구나 알아볼 수 있게 바꿀예정(ex.city)
-fig=px.choropleth(df,geojson=geometry,locations='gu_nm',color='count',
-                  color_continuous_scale='Blues',
-                  featureidkey='properties.SIG_KOR_NM')
-fig.update_geos(fitbounds="locations",visible=False)
-fig.update_layout(title_text="example",title_font_size=20,paper_bgcolor='#F5F7FA')
+
 
 #서울시 동 데이터 로드
 dong = json.load(open('./assets/seoul.json',encoding='utf-8'))
@@ -49,46 +37,116 @@ dong = json.load(open('./assets/seoul.json',encoding='utf-8'))
 
 
 
+#2. content
+sidebar = html.Div([
+    html.Div([
+        html.H2(children='Zol-zol-zol',className='font'),
+        ],
+        className='sidebar')]
+)
 
+header = html.Div(
+    children=[
+                html.P(children=html.Img(src="assets\motorcycle.ico", ), className="header_img"),
+                #html.H1(children="Dashboard", className="header_title"),
+                #html.P(children="설명~", className="header_description"),
+            ],
+            className='header_box',
+)
+
+
+page_layoutbox=html.Div(
+    children=[
+        # represents the browser address bar and doesn't render anything
+        dcc.Location(id='url', refresh=False),
+    
+        # content will be rendered in this element
+        html.Div(id='page-content'),
+        #html.Div(id="hidden_div_for_redirect_callback")
+    ],
+    className='layoutbox'
+)
 
 app.layout = html.Div([
-    
-    
-    
-    # represents the browser address bar and doesn't render anything
-    dcc.Location(id='url', refresh=False),
-    
-    # content will be rendered in this element
-    html.Div(id='page-content')
-    #html.Div(id="hidden_div_for_redirect_callback")
+    header,
+    sidebar,
+    page_layoutbox
 
 ])
 
 data= go.Bar(x=[])
 fig3 = go.Figure(data=data)
+fig3.update_traces(marker_color='rgb(158,202,225)', marker_line_color='rgb(8,48,107)',
+                  marker_line_width=1.5, opacity=0.6)
+fig3.update_layout(
+    title='보행자도로 주행 위반 TOP5',
+    paper_bgcolor='black',
+    autosize=False,
+    width=580,
+    height=330,)
+fig4 = go.Figure(data=data)
+fig4.update_layout(
+    title='정지선 위반 TOP5',
+    paper_bgcolor='white',
+    autosize=False,
+    width=580,
+    height=330)
   
 index_page = html.Div([
-    dcc.Graph(id='graph',figure=fig),
+    html.H2(children='서울시 범법행위 발생현황',className='index_text1'),
+    
+    #html.H3('누적 발생 현황',className='index_text2'),
+    html.Div([
+        html.Span('Total', className='total_idx'),
+        html.Br(),
+        html.Span(id='total_cnt',children = '', className='total_cnt'),
+    ],className='totalbox'), 
+    #html.Br(),
+    html.Div([
+        html.Span('Today   ',className='today_idx'),
+        html.Br(),
+        html.Span(id='today_cnt',children = '',className='today_cnt'),
+    ],className='todaybox'),
+    #?---드롭다운 callback 연결해야함
+    dcc.Dropdown(
+        ['2022-12','2022-11','2022-10','2022-09'], '2022-12', 
+        id='date-dropdown',
+        className="dropdown_date",
+        ),
+    html.Div(id='dd_date'),
+    #지도
+    dcc.Graph(id='graph',className='graph'),
+    #?---보행자와 정지선으로 데이터 변경해야함
+    html.Div([
+        html.Div(
+            id="map_people",
+            children=[
+                dcc.Graph(id='index-graph',figure=fig3),
+            ],
+            className='index-graph_people'),
+        #html.Br(),
+        html.Div(
+            id="map_stopline",
+            children=[
+                    dcc.Graph(id='index-graph_stopline',figure=fig4),
+                ],
+            className='index-graph_stopline'),
+
+        ],
+        className='index-graph_box'),         
     html.Div(id='index'),
     html.Div(id='total',
-        children=[
-            html.H1('총 발생현황'),
-            html.H3('구별 범법행위 순위'),
-            html.Ol(id='total_gu_list', children=[html.Li(i[0]) for i in []]), #db.select_total_gu()[['gu_nm','count']].values.tolist()
-            html.Div(id="map",children=[dcc.Graph(id='index-graph',figure=fig3)],style={'width':"20%","float": "left"}),
+        children=[           
             html.Br(),
-            html.Br(),
-            html.H3('누적 발생 현황'),
-            html.Span('Today   '),
-            html.Span(id='today_cnt',children = ''),
-            html.Br(),
-            html.Span('Total   '),
-            html.Span(id='total_cnt',children = ''),
-
+            
+            html.H3('구별 발생현황 TOP5',className='index_text3'),
+            html.Ol(id='total_gu_list', children=[html.Li(childeren=i[0]) for i in []], className='city_top5'), #db.select_total_gu()[['gu_nm','count']].values.tolist(),
+            #?---이거 줄바꿈 안하고 싶은데 왜안될까ㅠㅠ
         ],
     ),
     print("index")
-])
+],
+className="index_page")
 
 
 
@@ -97,7 +155,6 @@ def analytics_page(location):
     
     #왼쪽 지도 관련
     features = {"type": "FeatureCollection","features":[i for i in dong['features'] if i['properties']['sggnm']==location]}
-    xy=features['features'][0]['geometry']['coordinates'][0][0][5]
     geobuf=dlx.geojson_to_geobuf(features)  
       
     
@@ -107,12 +164,13 @@ def analytics_page(location):
         html.Div(id="title",
                 children=[
                     html.Div(id = "second_page"),
-                    html.Div(location),
-                    dcc.Dropdown(cities,location,id="city-dropdown",style={'width':"50%","float": "left"}),
-                    html.H2("Dashboard",style={"float": "left"})],
-                style={ 
-                     'height':'150px',
-                     'backgroundColor':'#787878'}
+                    html.Div(location,className='location'),
+                    html.H2('  발생현황',className='location_text'),
+                    dcc.Dropdown(cities,location,id="city-dropdown",className='city-dropdown'),
+                    html.Br(),html.Br(),html.Br()],
+                # style={ 
+                #      'height':'150px',
+                #      'backgroundColor':'#787878'}
                 ),
         
         ### 왼쪽 지도 
@@ -128,11 +186,11 @@ def analytics_page(location):
                         dl.LayerGroup(id="marker",children=[]), 
                         name="markers", checked=True)]),
                 dl.GeoJSON(data=geobuf, id="states",format="geobuf",zoomToBoundsOnClick=True,hoverStyle=arrow_function(dict(weight=5, color='#666', dashArray=''))),  # geobuf resource (fastest option)
-                ], style={'width': '100%', 'height': '50vh', 'margin': "auto", "display": "block"}),
-            html.Div(id="state"), html.Div(id="capital")],style={'width':"50%","float": "left"}),
+                ], style={'width': '90%', 'height': '500px', 'margin-top': "-30px"}),
+            html.H3(id="state"), html.Div(id="capital")],style={'width':"50%","float": "left"}),
         
         ##오른쪽
-        html.Div(id="right_page",children=display_gu_page(location),style = {'width':'50%','float':'right'}),
+        html.Div(id="right_page",children=display_gu_page(location),className='right_page'),
         
     ])
     
@@ -213,15 +271,38 @@ def state_hover(feature):
         return f"{feature['properties']['adm_nm']}"
     
 
-
+########################################
 @callback(Output("total_gu_list", "children"),
           Output("index-graph", "figure"),
-          Input("total",'children'))
-def change_total_gu_list(none):
-    gu = db.select_total_gu(12)
+          Output("index-graph_stopline", "figure"),
+          Output("graph", "figure"),
+          Input("date-dropdown",'value'))
+def change_total_gu_list(value):
+    month = value[-2:]
+    gu = db.select_total_gu(month)
     data= go.Bar(x=gu['gu_nm'],y=gu['count'])
     flg = go.Figure(data=data)
-    return [html.Li(i[0]) for i in gu[['gu_nm','count']].values.tolist()],flg
+    
+    
+    return [html.Li(i[0]) for i in gu[['gu_nm','count']].values.tolist()],flg,flg,make_choropleth(month)
+
+
+def make_choropleth(month):
+    #임시데이터
+    df = db.select_total_cnt_gu(month)
+    for i in cities:
+        if i not in df['gu_nm'].values.tolist():
+            df = pd.concat([df,pd.DataFrame({'gu_nm':[i],'count':[0]})],ignore_index=True)
+            
+            
+    #Choropleth 시각화 -> 추후 SIG_KOR_NM column 을 누구나 알아볼 수 있게 바꿀예정(ex.city)
+    fig=px.choropleth(df,geojson=geometry,locations='gu_nm',color='count',
+                      color_continuous_scale='Blues',
+                      featureidkey='properties.SIG_KOR_NM')
+    fig.update_geos(fitbounds="locations",visible=False)
+    fig.update_layout(title_text="example",title_font_size=20,paper_bgcolor='#F5F7FA')
+    return fig
+
 
 @callback(Output("today_cnt", "children"),Input("total",'children'))
 def change_today_cnt(none):
@@ -374,7 +455,7 @@ def make_graph(value):
         if not data2.empty:
             data2 = data2.resample(rule='1W', on='time').sum()        
             data2 = data2.reset_index(drop=False)
-            
+
         fig = go.Figure(go.Scatter(x=data1['time'], y=data1['crime_cnt'],
                 mode='lines+markers', name='정지선 위반'))
         fig.add_traces(go.Scatter(x=data2['time'], y=data2['crime_cnt'],
@@ -385,17 +466,17 @@ def make_graph(value):
         if not data1.empty:
             data1 = data1.resample(rule='1M', on='time').sum()
             data1 = data1.reset_index(drop=False)
-            data1['time']= data1['time'].dt.month
+            
         
         if not data2.empty:
             data2 = data2.resample(rule='1M', on='time').sum()
             data2 = data2.reset_index(drop=False)
-            data2['time']= data2['time'].dt.month
+            
         
         
         fig = go.Figure(go.Scatter(x=data1['time'], y=data1['crime_cnt'],
                 mode='lines+markers', name='정지선 위반'))
-        fig.add_traces(go.Scatter(x=data1['time'], y=data1['crime_cnt'],
+        fig.add_traces(go.Scatter(x=data2['time'], y=data2['crime_cnt'],
                 mode='lines+markers', name='보행자도로 통행 위반'))
         fig.update_layout(template='plotly_white')
 
