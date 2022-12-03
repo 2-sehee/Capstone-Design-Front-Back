@@ -47,7 +47,7 @@ sidebar = html.Div([
 
 header = html.Div(
     children=[
-                html.P(children=html.Img(src="assets\motorcycle.ico", ), className="header_img"),
+                html.A(href="/",children=html.Img(src="assets\motorcycle.ico", ), className="header_img"),
                 #html.H1(children="Dashboard", className="header_title"),
                 #html.P(children="설명~", className="header_description"),
             ],
@@ -74,23 +74,23 @@ app.layout = html.Div([
 
 ])
 
-data= go.Bar(x=[])
-fig3 = go.Figure(data=data)
-fig3.update_traces(marker_color='rgb(158,202,225)', marker_line_color='rgb(8,48,107)',
-                  marker_line_width=1.5, opacity=0.6)
-fig3.update_layout(
-    title='보행자도로 주행 위반 TOP5',
-    paper_bgcolor='black',
-    autosize=False,
-    width=580,
-    height=330,)
-fig4 = go.Figure(data=data)
-fig4.update_layout(
-    title='정지선 위반 TOP5',
-    paper_bgcolor='white',
-    autosize=False,
-    width=580,
-    height=330)
+
+# fig3 = go.Figure(data=data)
+# fig3.update_traces(marker_color='rgb(158,202,225)', marker_line_color='rgb(8,48,107)',
+#                   marker_line_width=1.5, opacity=0.6)
+# fig3.update_layout(
+#     title='보행자도로 주행 위반 TOP5',
+#     paper_bgcolor='black',
+#     autosize=False,
+#     width=580,
+#     height=330,)
+# fig4 = go.Figure(data=data)
+# fig4.update_layout(
+#     title='정지선 위반 TOP5',
+#     paper_bgcolor='white',
+#     autosize=False,
+#     width=580,
+#     height=330)
   
 index_page = html.Div([
     html.H2(children='서울시 범법행위 발생현황',className='index_text1'),
@@ -121,14 +121,14 @@ index_page = html.Div([
         html.Div(
             id="map_people",
             children=[
-                dcc.Graph(id='index-graph',figure=fig3),
+                dcc.Graph(id='index-graph'),
             ],
             className='index-graph_people'),
         #html.Br(),
         html.Div(
             id="map_stopline",
             children=[
-                    dcc.Graph(id='index-graph_stopline',figure=fig4),
+                    dcc.Graph(id='index-graph_stopline'),
                 ],
             className='index-graph_stopline'),
 
@@ -141,7 +141,6 @@ index_page = html.Div([
             
             html.H3('구별 발생현황 TOP5',className='index_text3'),
             html.Ol(id='total_gu_list', children=[html.Li(childeren=i[0]) for i in []], className='city_top5'), #db.select_total_gu()[['gu_nm','count']].values.tolist(),
-            #?---이거 줄바꿈 안하고 싶은데 왜안될까ㅠㅠ
         ],
     ),
     print("index")
@@ -280,11 +279,33 @@ def state_hover(feature):
 def change_total_gu_list(value):
     month = value[-2:]
     gu = db.select_total_gu(month)
-    data= go.Bar(x=gu['gu_nm'],y=gu['count'])
-    flg = go.Figure(data=data)
+    
+    gu_road = db.select_crime_gu(month, "보행자 도로 위반")
+    data1= go.Bar(x=gu_road['gu_nm'],y=gu_road['count'])
+    fig = go.Figure(data=data1)
+    fig.update_traces(marker_color='#6667AB', marker_line_color='rgb(8,48,107)',
+                  marker_line_width=1.5, opacity=0.6)
+    fig.update_layout(
+        title='보행자도로 주행 위반 TOP5',
+        paper_bgcolor='white',
+        autosize=False,
+        width=580,
+        height=330,)
     
     
-    return [html.Li(i[0]) for i in gu[['gu_nm','count']].values.tolist()],flg,flg,make_choropleth(month)
+    
+    gu_stopline = db.select_crime_gu(month, "정지선 위반")
+    data2= go.Bar(x=gu_stopline['gu_nm'],y=gu_stopline['count'])
+    fig4 = go.Figure(data=data2)
+    fig4.update_layout(
+        title='정지선 위반 TOP5',
+        paper_bgcolor='white',
+        autosize=False,
+        width=580,
+        height=330)
+    
+    
+    return [html.Li(i[0]) for i in gu[['gu_nm','count']].values.tolist()],fig,fig4,make_choropleth(month)
 
 
 def make_choropleth(month):
@@ -298,9 +319,12 @@ def make_choropleth(month):
     #Choropleth 시각화 -> 추후 SIG_KOR_NM column 을 누구나 알아볼 수 있게 바꿀예정(ex.city)
     fig=px.choropleth(df,geojson=geometry,locations='gu_nm',color='count',
                       color_continuous_scale='Blues',
+                      color_continuous_midpoint=200,
+                      range_color=(0, 500),
                       featureidkey='properties.SIG_KOR_NM')
     fig.update_geos(fitbounds="locations",visible=False)
-    fig.update_layout(title_text="example",title_font_size=20,paper_bgcolor='#F5F7FA')
+    fig.update_layout(paper_bgcolor='#F5F7FA')
+#    fig.update_layout(title_text="example",title_font_size=20,paper_bgcolor='#F5F7FA')
     return fig
 
 
@@ -362,33 +386,50 @@ def display_gu_page(value):
     dong1 = db.select_stopline(value)
     data= go.Bar(x=dong1['dong_nm'],y=dong1['count'])
     flg = go.Figure(data=data)
+    flg.update_layout(title='정지선 위반 TOP5')
     
     dong2 = db.select_road(value)
     data2= go.Bar(x=dong2['dong_nm'],y=dong2['count'])
     flg2 = go.Figure(data=data2)
+    flg2.update_layout(title='보행자도로 통행위반 TOP5')
     
     return [
         graph_layout([1,value]),
-        html.Div(id="none",children=[dcc.Graph(id='dong-graph_stopline_top5',figure=flg)]),
-        html.Div(id="none",children=[dcc.Graph(id='dong-graph_road_top5',figure=flg2)])
+        html.Div(id="none1",children=[dcc.Graph(id='dong-graph_stopline_top5',figure=flg)]),
+        html.Div(id="none2",children=[dcc.Graph(id='dong-graph_road_top5',figure=flg2)])
     ]
 
 #두번째 페이지 오른쪽
 def display_dong_page(value):
-    print("??????")
+    si,gun,gu = value.split()
     return [
+        html.H2(gun+" "+gu),
         graph_layout([2,value])
     ]
 
 #세번째 페이지 오른쪽
 def display_cctv_page(value):
     crime = ['정지선 위반', '보행자 도로 위반']
+    
     data = db.select_cctv(value,crime[0])
     data1 = db.select_cctv(value,crime[1])
-    
+    df = pd.concat([data,data1],ignore_index=True)
+
+    fig = px.pie(df, names='crime_type', 
+             height=300, width=600, 
+             hole = 0.7,
+             title='범법행위 비율',
+             color_discrete_sequence=['#4c78a8', '#72b7b2'])
+    fig.update_layout(plot_bgcolor='#fafafa', paper_bgcolor='#fafafa')
+
+
+    #cctv 위치 정보
+    location = db.select_cctv_location(value).loc[0]
 
     return [
+        html.H2(location['gu_nm']+" "+location['dong_nm']),
         graph_cctv_layout([3,value]),
+        html.Div(id="pie",children=[dcc.Graph(id='pie',figure=fig)])
         
     ]
 
@@ -410,15 +451,17 @@ def display_cctv_page(value):
 def make_graph(value):
     value = json.loads(value)
     print(value) #ex)['일간통계',[1,value값]]
-
+    
     if value[1][0] == 1: #구통계
         data1 = db.select_gu(value[1][1],"정지선 위반")
         if not data1.empty :
             data1['time'] = pd.to_datetime(data1['time'].dt.date)
+            
         
         data2 = db.select_gu(value[1][1],"보행자 도로 위반")
         if not data2.empty:
             data2['time'] = pd.to_datetime(data2['time'].dt.date)
+            
             
     elif value[1][0] ==2 : #동통계
         si,gu,dong = value[1][1].split()
@@ -432,7 +475,27 @@ def make_graph(value):
             data2['time'] = pd.to_datetime(data2['time'].dt.date)
         
         
-        
+    if data1.empty and data2.empty:
+        fig = go.Figure()
+        fig.update_layout(
+            xaxis= {
+                "visible": False },
+            yaxis= {
+                "visible": False },
+            annotations= [
+                {
+                "text": "No matching data found",
+                "xref": "paper",
+                "yref": "paper",
+                "showarrow": False,
+                "font": {
+                    "size": 28
+                }
+                }
+            ]
+        )
+        print("1234")
+        return fig
 
     if '일간 통계' in value[0]:
         if not data1.empty :
@@ -478,7 +541,7 @@ def make_graph(value):
                 mode='lines+markers', name='정지선 위반'))
         fig.add_traces(go.Scatter(x=data2['time'], y=data2['crime_cnt'],
                 mode='lines+markers', name='보행자도로 통행 위반'))
-        fig.update_layout(template='plotly_white')
+        fig.update_layout(template='seaborn')
 
     
     
@@ -489,6 +552,9 @@ def make_graph(value):
     #fig.update_layout(showlegend=True, legend=dict(x=1,y=0.85))
     fig.update_layout(uirevision='constant')
     fig.update_layout(title='<b>범법행위 발생 추이')
+    
+
+        
 
     return(fig)
 
@@ -554,6 +620,28 @@ def make_cctv_graph(value):
     value = json.loads(value)
     data1 = db.select_cctv(value[1][1],"정지선 위반")
     data2 = db.select_cctv(value[1][1],"보행자 도로 위반")
+    
+    if data1.empty and data2.empty:
+        fig = go.Figure()
+        fig.update_layout(
+            xaxis= {
+                "visible": False },
+            yaxis= {
+                "visible": False },
+            annotations= [
+                {
+                "text": "No matching data found",
+                "xref": "paper",
+                "yref": "paper",
+                "showarrow": False,
+                "font": {
+                    "size": 28
+                }
+                }
+            ]
+        )
+        print("1234")
+        return fig
 
     if not data1.empty :
         data1['time'] = pd.to_datetime(data1['time'].dt.date)
@@ -563,6 +651,8 @@ def make_cctv_graph(value):
         data2['time'] = pd.to_datetime(data2['time'].dt.date)
         
         
+    print("#####")
+    
     if '주간 통계' in value[0]:
         if not data1.empty :
             data1 = data1.resample(rule='1W', on='time').sum()
