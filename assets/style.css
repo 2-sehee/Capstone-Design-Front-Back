@@ -1,20 +1,54 @@
 /*스타일 설정을 위한 css file*/
-
-/*page 1*/
-.font{
-    color: white;
-    text-align: center;
+@font-face {
+    font-family: 'Happiness-Sans-Title';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2205@1.0/Happiness-Sans-Title.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
 }
+
+@font-face {
+    font-family: 'Jal_Onuel';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10-21@1.0/Jal_Onuel.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'LINESeedKR-Bd';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_11-01@1.0/LINESeedKR-Bd.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+}
+  
+/*page 1*/
+
 .sidebar{
     position: absolute;
     top: 0;
     left: 0;
     bottom : 0;
     width: 13%;
+    height: 1500px;
     /*padding: 2rem 1rem;*/
     background-color: #222834;
     display: visible;
     text-decoration-color: white;
+}
+.hr{
+    color: #F5F7FA;
+    opacity: 0.3;
+    margin-bottom: 10%;
+    width: 90%;
+}
+.sidebar_text2{
+    color: white;
+    margin-left: 7%;
+    opacity: 0.8;
+    font-family: 'Jal_Onuel';
+}
+.logo{
+    margin-left: 15%;
+    margin-top: 30px;
+
 }
 
 /*헤더 아이콘(오토바이)*/
@@ -62,33 +96,6 @@
     color: #070b1d ;
 }
 
-/*데이터 셋팅 박스 설명인데 안씀
-.menu_discription {
-    height: 100px;
-    max-width: 1200px;
-    display: flex;
-    justify-content: space-evenly; /*아이템 사이 균일한 간격
-    padding-top: 32px;
-    margin: 0px auto 0 auto;
-    background-color: #FFFFFF;
-    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.18);
-    
-}*/
-
-/*데이터 셋팅 bg box, 
-fade_btn이 구현되면 이 부분이 fade부분이 됨*/
-.dropdown_bg {
-    height: 112px;
-    width: 75%;
-    display: flex;
-    float : left;
-    justify-content: space-evenly;
-    padding-top: 5px;
-    margin: 0px auto 0 auto;
-    background-color: #f0f9ff;
-    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.18);
-}
-
 /*지도 display bg box*/
 .layoutbox {
     background-color: #F5F7FA;
@@ -97,7 +104,7 @@ fade_btn이 구현되면 이 부분이 fade부분이 됨*/
     float: right;
     position: relative;
     border-top: 2px solid rgba(92, 91, 91, 0.384);
-    /*border-bottom: 2px solid rgba(92, 91, 91, 0.384);*/
+    border-bottom: 2px solid rgba(92, 91, 91, 0.384);
 }
 
 .index_hr1{
@@ -108,27 +115,21 @@ fade_btn이 구현되면 이 부분이 fade부분이 됨*/
     padding-left: 10px;
 }
 
-.index_text1{
-    margin-left: 45px;
+.main_title{
+    margin-left: 6%;
     margin-top: 3%;
     display: inline-block;
+    font-family: 'Happiness-Sans-Title';
+    color: #222834;
+    text-shadow: 2px 2px 2px gray;
 }
-.index_text1box{
-    float: left;
-    width: 25%;
-    height: 60px;
-    background-color:#F5F7FA;
-    border-left: 6px solid #3874FF;
-    border-radius: 0px;
-    margin-left: 45px;
-    margin-top: 3%;
-    
-}
+
 .dropdown_date{
     width: 55%;
     padding-left: 40%;   
     display: inline-block;
-    padding-top: 13px;
+    padding-top: 10px;
+    bottom: 10px;
     
 }
 
@@ -141,7 +142,6 @@ fade_btn이 구현되면 이 부분이 fade부분이 됨*/
     float: left;
     position: absolute;
     bottom: 140px;
-    padding-top: 10px;
     margin-left: 10px;
     /*border: 5px solid white;
     border-radius: 20px;*/
@@ -162,12 +162,19 @@ ol li{
     display: inline-block; 
     margin-left : 20px;
 }
-
+.top5{
+    margin-top: 450px;
+    margin-left: 90px;
+    font-size: 30px;
+    
+}
 .today_idx{
+    font-family: 'Happiness-Sans-Title';
     font-size: larger;
     padding-left: 10%;
 }
 .today_cnt{
+    font-family: 'Happiness-Sans-Title';
     font-size: large;
     padding-left: 10%;
 }
@@ -183,11 +190,13 @@ ol li{
     
 }
 .total_idx{
+    font-family: 'Happiness-Sans-Title';
     font-size: larger;
     padding-left: 10%;
 
 }
 .total_cnt{
+    font-family: 'Happiness-Sans-Title';
     font-size: large;
     padding-left: 10%;
 }
@@ -215,7 +224,7 @@ ol li{
     
     margin-bottom: -30px;
     background-color: white;
-   
+
     /*border: 5px solid white;
     border-radius: 20px;
     box-shadow: 1px 1px 1px 1px rgb(184, 183, 183);*/
@@ -235,15 +244,24 @@ ol li{
 /*page 2*/
 
 /*두 번째 페이지 구 dropdown bg*/
+.graph_title{
+    font-family: 'LINESeedKR-Bd';
+}
 .location{
     margin-left: 3%;
     margin-top: 50px;
     display: inline-block;
+    font-family: 'Happiness-Sans-Title';
+    color: #222834;
+    text-shadow: 2px 2px 2px gray;
 }
 .location_text{
-    margin-left: 5px;
+    padding-left: 10px;
     margin-top: 50px;
     display: inline-block;
+    font-family: 'Happiness-Sans-Title';
+    color: #222834;
+    text-shadow: 2px 2px 2px gray;
 }
 .analytics_page-content {
     height: 150px;
@@ -257,12 +275,74 @@ ol li{
     padding-top: 0px;
 }
 .right_page{
-    width: 40%;
+    width: 38%;
     float: right;
     margin-right: 5%;
+    margin-top: -110px;
 }
 
 
+.gun_gu_text{
+    float: right;
+    width: 40%;
+    height: 40px;
+    background-color:#F5F7FA;
+    border-left: 6px solid #3874FF;
+    border-radius: 0px;
+    margin-right: 65%;
+    margin-top: -10%;
+    padding-left: 3%;
+    font-family: 'Happiness-Sans-Title';
+}
+.pie{
+    float: right;
+    margin-right: -5%;
+    margin-top: -20%;
+}
+.container_dong{
+    width: 100%;
+    height: -50%;
+    margin-top: 55.5px;
+    margin-bottom: 60%;
+    margin-right: 10%;
+ 
+    float: right;
+    
+}
+.container_cctv{
+    width: 100%;
+    height: -50%;
+    margin-top: -4.7%;
+    margin-bottom: 60%;
+    margin-right: 10%;
+    float: right;
+    
+}
 
-
-
+.locationsub{
+    float: left;
+    margin-left: -130%;
+    margin-top: 720px;
+    border-left: 6px solid #3874FF;
+    padding-left: 3%;
+    font-family: 'Happiness-Sans-Title';
+    color: #222834;
+    
+}
+.dong-graph_stopline_top5{
+    width: 100%;
+    float: left;
+    margin-top: 800px;
+    margin-left: -130%;
+    border: 6px solid #F5F7FA;
+    border-radius: 20px;
+}
+.dong-graph_road_top5{
+    width: 100%;
+    float: right;
+    margin-top: -190px;
+    margin-right: 10%;
+    border: 6px solid #F5F7FA;
+    border-radius: 20px;
+    
+}
