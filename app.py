@@ -47,11 +47,17 @@ sidebar = html.Div([
         html.Hr(className='hr'),
         html.Div(
             children=[
-                html.H4(children=['단속 가능한 범법행위 유형',html.H5('   (단속대상 : 오토바이)')],className='sidebar_text1'),
+                html.H4(children=['단속 가능한 범법행위 유형',html.H5('   (단속대상 : 오토바이)')]),
                 html.H5(children=['1. 정지선 위반 행위',html.Br(),html.Br(),'2. 보행자도로 주행 위반 행위']),
                 
-        ], className='sidebar_text2'), 
+        ], className='sidebar_text'), 
         html.Hr(className='hr'),
+        html.Div(
+            children=[
+                html.H4('🚨범법행위 단속하기🚨')
+                #영상추가 버튼
+            ],className='sidebar_text',
+        )
         ],
         className='sidebar')]
 )
