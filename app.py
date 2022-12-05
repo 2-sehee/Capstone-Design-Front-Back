@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from dash import Dash, html, dcc, Input, Output, callback, ctx, ALL, no_update
+from dash import Dash, html, dcc, Input, Output, callback, ctx, ALL, no_update, State
 import dash
 import plotly.express as px
 import plotly.graph_objects as go
@@ -12,6 +12,8 @@ import dash_leaflet.express as dlx
 from dash_extensions.javascript import arrow_function
 import dash_bootstrap_components as dbc
 import numpy as np
+import datetime
+
 
 
 #두번쨰페이지 지도 소스
@@ -45,6 +47,7 @@ sidebar = html.Div([
         #html.H2(children='Zol-zol-zol',className='font'),
         html.P(children=html.Img(src="assets\zolzolzol_logo.ico",width=160),className="logo"),
         html.Hr(className='hr'),
+        
         html.Div(
             children=[
                 html.H4(children=['단속 가능한 범법행위 유형',html.H5('   (단속대상 : 오토바이)')],className='sidebar_text1'),
@@ -52,6 +55,9 @@ sidebar = html.Div([
                 
         ], className='sidebar_text2'), 
         html.Hr(className='hr'),
+        html.Button(
+            '영상 추가',id="button"
+        )
         ],
         className='sidebar')]
 )
@@ -85,23 +91,6 @@ app.layout = html.Div([
 
 ])
 
-#서울시 구별 순위 top5 stacked barplot
-#fig0 = go.Figure(data=data)
-#fig0.update_traces(marker_color='rgb(158,202,225)', marker_line_color='rgb(8,48,107)',
-#                   marker_line_width=1.5, opacity=0.6)
-#fig0.update_layout(
-#    title='보행자도로 주행 위반 TOP5',
-#    paper_bgcolor='#F5F7FA',
-#    autosize=False,
-#    width=580,
-#    height=330,)
-# fig4 = go.Figure(data=data)
-# fig4.update_layout(
-#     title='정지선 위반 TOP5',
-#     paper_bgcolor='white',
-#     autosize=False,
-#     width=580,
-#     height=330)
   
 index_page = html.Div([
     html.H1(children='서울시 오토바이 범법행위 발생현황',className='main_title'),
@@ -205,7 +194,61 @@ def analytics_page(location):
         
     ])
     
+
+#영상 업로드
+upload_page = html.Div([
+    dcc.Upload(
+        id='upload-image',
+        children=html.Div([
+            'Drag and Drop or ',
+            html.A('Select Files')
+        ]),
+        style={
+            'width': '100%',
+            'height': '60px',
+            'lineHeight': '60px',
+            'borderWidth': '1px',
+            'borderStyle': 'dashed',
+            'borderRadius': '5px',
+            'textAlign': 'center',
+            'margin': '10px'
+        },
+        # Allow multiple files to be uploaded
+        multiple=True
+    ),
+    html.Div(id='output-image-upload'),
+])
+
+def parse_contents(contents, filename, date):
+    return html.Div([
+        html.H5(filename),
+        html.H6(datetime.datetime.fromtimestamp(date)),
+
+        # HTML images accept base64 encoded strings in the same format
+        # that is supplied by the upload
+        html.Video(src=contents,controls=True,style={'width':'60%','height':'300px'}),
+        html.Hr(),
+        # html.Div('Raw Content'),
+        # html.Pre(contents[0:200] + '...', style={
+        #     'whiteSpace': 'pre-wrap',
+        #     'wordBreak': 'break-all'
+        # })
+    ])
+
+@app.callback(Output('output-image-upload', 'children'),
+              Input('upload-image', 'contents'),
+              State('upload-image', 'filename'),
+              State('upload-image', 'last_modified'))
+def update_output(list_of_contents, list_of_names, list_of_dates):
+    if list_of_contents is not None:
+        children = [
+            parse_contents(c, n, d) for c, n, d in
+            zip(list_of_contents, list_of_names, list_of_dates)]
+        return children
     
+######
+
+   
     
 def detail_page(detail_location):
     return html.Div(id="detail_page-content",children=[
@@ -239,16 +282,32 @@ def move_page(clickData):
 
 
 @callback(Output('page-content', 'children'),
-               Input('url', 'pathname'),prevent_initial_call=True)
-def display_page(pathname):
+               Input('url', 'pathname'),
+               Input('button','n_clicks')
+               ,prevent_initial_call=True)
+def display_page(pathname,button):
     print("display")
     
     print(pathname)
-    for city in cities:
-        if pathname == '/'+city :
-            return analytics_page(city)
+    
+    triggered_id = ctx.triggered_id
+    print(triggered_id)
+    
+    
+    
+    if triggered_id == 'url':
+        for city in cities:
+            if pathname == '/'+city :
+                return analytics_page(city)
+    elif triggered_id == 'button':
+        return upload_page
+        
 
     return  index_page
+
+
+
+
 
 @callback(Output('analytics_page-content', 'children'),
                Input('url','href'),prevent_initial_call=True)
@@ -274,7 +333,6 @@ def capital_click(feature):
                           ,position=[position[i][1],position[i][2]]) for i in range(len(position))]
 
         
-
 
 @callback(Output("state", "children"), [Input("states", "hover_feature")])
 def state_hover(feature):
@@ -354,21 +412,6 @@ def change_total_gu_list(value):
                         font=dict({'family':'LINESeedKR-Bd','size':15}),
                         )
 
-#    fig0 = go.Figure(data=data3)
-#    fig0.update_traces(marker_color='rgb(158,202,225)', marker_line_color='rgb(8,48,107)',
-#                       marker_line_width=1.5, opacity=0.6)
-#    fig0.update_layout(
-#        title='구별 TOP5',
-#        paper_bgcolor='#F5F7FA',
-#        autosize=False,
-#        width=580,
-#        height=330,
-#        barmode='stack',
-#        template=None,
-        
-#        )
-    #여기 구별 top5
-    #[html.Li(i[0]) for i in gu[['gu_nm','count']].values.tolist()],
     return fig,fig4,make_choropleth(month),fig0
 
 
@@ -506,7 +549,6 @@ def display_cctv_page(value):
         html.H2(children=[location['gu_nm']+" "+location['dong_nm']],className='gun_gu_text'),
         html.Div(id="pie",children=[dcc.Graph(id='pie',figure=fig)],className='pie'),
         graph_cctv_layout([3,value]),
-        
     ]
 
 
