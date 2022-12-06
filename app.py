@@ -68,12 +68,12 @@ sidebar = html.Div([
             children=[
                 html.A('Team Zol-zol-zol',href='https://github.com/zol-zol-zol',className='sidebar_text3'),
                 html.H4('💻 Back & Front', className='sidebar_text4'),
-                html.H4('@sumeen', className='sidebar_text5'),
-                html.H4('@seheee', className='sidebar_text5'),
+                html.H4('🧚 sumeen ', className='sidebar_text5'),
+                html.H4('🐧 seheee ', className='sidebar_text5'),
                 html.H4('⚙️ Data & Modeling', className='sidebar_text4'),
-                html.H4('@minnnnji', className='sidebar_text5'),
-                html.H4('@김혜정', className='sidebar_text5'),
-                html.H4('@최성원', className='sidebar_text5'),
+                html.H4('💃 minnnnji', className='sidebar_text5'),
+                html.H4('🦩 hyelllllog', className='sidebar_text5'),
+                html.H4('🕊️ castle_1', className='sidebar_text5'),
             ]
         )
 
