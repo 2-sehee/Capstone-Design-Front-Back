@@ -156,14 +156,12 @@ index_page = html.Div([
             dcc.Graph(id='top5',className='top5'),
         ],
     ),
-    print("index")
 ],
 className="index_page")
 
 
 
 def analytics_page(location):
-    print(location)
     
     #왼쪽 지도 관련
     features = {"type": "FeatureCollection","features":[i for i in dong['features'] if i['properties']['sggnm']==location]}
@@ -276,8 +274,6 @@ def detail_page(detail_location):
     Output('url', 'href'),
     Input('city-dropdown', 'value'), prevent_initial_call=True)
 def move_page_dropdown(value):
-    print("move")
-    print(value)
     if value is not None:    
         return "/"+value
     return no_update
@@ -288,7 +284,6 @@ def move_page_dropdown(value):
     Output('url', 'pathname'),
     Input('graph', 'clickData'), prevent_initial_call=True)
 def move_page(clickData):
-    print(clickData)
     if clickData is not None:            
         location = clickData['points'][0]['location']
         return "/"+location
@@ -301,14 +296,8 @@ def move_page(clickData):
                Input('button','n_clicks')
                ,prevent_initial_call=True)
 def display_page(pathname,button):
-    print("display")
-    
-    print(pathname)
-    
+
     triggered_id = ctx.triggered_id
-    print(triggered_id)
-    
-    
     
     if triggered_id == 'url':
         for city in cities:
@@ -327,8 +316,6 @@ def display_page(pathname,button):
 @callback(Output('analytics_page-content', 'children'),
                Input('url','href'),prevent_initial_call=True)
 def display_page2(href):
-    print("display2")
-    print(href)
     
     for city in cities:
         if href=="/"+city:
@@ -460,26 +447,18 @@ def change_map_center(value):
           )
 def change_right_page(value1,value2,value3):
     triggered_id = ctx.triggered_id
-    print(triggered_id)
-    print(dash.callback_context.triggered)
-    
-    
+
+        
     if triggered_id == 'city-dropdown':
-        print("1")
-        print(value1) #ex) 강남구
         return display_gu_page(value1)
     elif triggered_id == 'states':
-        print("2")
-        print(value2) #ex) 'properties': {'OBJECTID': 378, 'adm_nm': '서울특별시 강남구 대치2동'
         return display_dong_page(value2['properties']['adm_nm'])
     else:
         k = dash.callback_context.triggered #ex)[{'prop_id': '{"index":"C000893","tag":"mark"}.n_clicks', 'value': 1}]
-        if k[0]['value'] is not None and len(k)==1: #triggered_id['tag'] == 'mark'
-            print("^^")        
+        if k[0]['value'] is not None and len(k)==1: #triggered_id['tag'] == 'mark'     
         
             return display_cctv_page(triggered_id['index'])
         else:
-            print("4")
             return no_update
         
     
@@ -563,9 +542,8 @@ def display_cctv_page(value):
     [Input("display_figure", "value"),
     ],
 )
-def make_graph(value):
+def make_graph(value): #ex)['일간통계',[1,value값]]
     value = json.loads(value)
-    print(value) #ex)['일간통계',[1,value값]]
 
     if value[1][0] == 1: #구통계
         data1 = db.select_gu(value[1][1],"정지선 위반")
@@ -609,7 +587,6 @@ def make_graph(value):
             paper_bgcolor='#F5F7FA',
             plot_bgcolor='#F5F7FA'
         )
-        print("1234")
         return fig    
 
     if '일간 통계' in value[0]:
@@ -757,7 +734,6 @@ def make_cctv_graph(value):
             paper_bgcolor='#F5F7FA',
             plot_bgcolor='#F5F7FA'
         )
-        print("1234")
         return fig
 
     if not data1.empty :
@@ -767,7 +743,6 @@ def make_cctv_graph(value):
     if not data2.empty:
         data2['time'] = pd.to_datetime(data2['time'].dt.date)
 
-    print("#####")
         
         
     if '주간 통계' in value[0]:
