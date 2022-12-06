@@ -44,39 +44,50 @@ dong = json.load(open('./assets/seoul.json',encoding='utf-8'))
 #2. content
 sidebar = html.Div([
     html.Div([
-        #html.H2(children='Zol-zol-zol',className='font'),
         html.P(children=html.Img(src="assets\zolzolzol_logo.ico",width=160),className="logo"),
         html.Hr(className='hr'),
         
         html.Div(
             children=[
-                html.H4(children=['단속 가능한 범법행위 유형',html.H5('   (단속대상 : 오토바이)')]),
-                html.H5(children=['1. 정지선 위반 행위',html.Br(),html.Br(),'2. 보행자도로 주행 위반 행위']),
+                html.H3(children=['단속 중인 범법행위 유형',html.H5('   (단속대상 : 오토바이)')]),
+                html.H4(children=['1. 정지선 위반 행위',html.Br(),html.Br(),'2. 보행자도로 주행 위반 행위']),
                 
         ], className='sidebar_text'), 
+
         html.Hr(className='hr'),
-<<<<<<< HEAD
         html.Div(
             children=[
-                html.H4('🚨범법행위 단속하기🚨')
-                #영상추가 버튼
-            ],className='sidebar_text',
-=======
-        html.Button(
-            '영상 추가',id="button"
->>>>>>> f7683784a9e85c96f9370b340a30add4c5e90733
+                html.H3('🚨 범법행위 단속하기 🚨'),
+                html.Button(
+                    'upload video',id="button",className='videobutton'
+                ),
+            ],className='sidebar_text2',),
+        html.Hr(className='hr'),
+
+        html.Div(
+            children=[
+                html.A('Team Zol-zol-zol',href='https://github.com/zol-zol-zol',className='sidebar_text3'),
+                html.H4('💻 Back & Front', className='sidebar_text4'),
+                html.H4('@sumeen', className='sidebar_text5'),
+                html.H4('@seheee', className='sidebar_text5'),
+                html.H4('⚙️ Data & Modeling', className='sidebar_text4'),
+                html.H4('@minnnnji', className='sidebar_text5'),
+                html.H4('@김혜정', className='sidebar_text5'),
+                html.H4('@최성원', className='sidebar_text5'),
+            ]
         )
+
         ],
-        className='sidebar')]
+        className='sidebar'),
+        
+        ]
 )
 
 header = html.Div(
     children=[
-                html.A(href="/",children=html.Img(src="assets\motorcycle.ico", ), className="header_img"),
-                #html.H1(children="Dashboard", className="header_title"),
-                #html.P(children="설명~", className="header_description"),
-            ],
-            className='header_box',
+            html.A(href="/",children=html.Img(src="assets\motorcycle.ico", ), className="header_img"),
+         ],
+        className='header_box',
 )
 
 
@@ -103,13 +114,11 @@ app.layout = html.Div([
 index_page = html.Div([
     html.H1(children='서울시 오토바이 범법행위 발생현황',className='main_title'),
     
-    #html.H3('누적 발생 현황',className='index_text2'),
     html.Div([
         html.Span('Total', className='total_idx'),
         html.Br(),
         html.Span(id='total_cnt',children = '', className='total_cnt'),
     ],className='totalbox'), 
-    #html.Br(),
     html.Div([
         html.Span('Today   ',className='today_idx'),
         html.Br(),
@@ -144,9 +153,6 @@ index_page = html.Div([
     html.Div(id='total',
         children=[           
             html.Br(),
-            
-            #html.H3('자치구별 범법행위 발생순위',className='index_text3'),
-            #html.Ol(id='total_gu_list', children=[html.Li(childeren=i[0]) for i in []], className='city_top5'), #db.select_total_gu()[['gu_nm','count']].values.tolist(),
             dcc.Graph(id='top5',className='top5'),
         ],
     ),
@@ -174,9 +180,7 @@ def analytics_page(location):
                     html.H1('  상세현황',className='location_text'),
                     dcc.Dropdown(cities,location,id="city-dropdown",className='city-dropdown'),
                     html.Br(),html.Br(),html.Br()],
-                # style={ 
-                #      'height':'150px',
-                #      'backgroundColor':'#787878'}
+                
                 ),
         
         ### 왼쪽 지도 
@@ -209,8 +213,8 @@ upload_page = html.Div([
         id='upload-image',
         children=html.Div([
             'Drag and Drop or ',
-            html.A('Select Files')
-        ]),
+            html.A('Select Files'),
+            ]),
         style={
             'width': '100%',
             'height': '60px',
@@ -225,6 +229,9 @@ upload_page = html.Div([
         multiple=True
     ),
     html.Div(id='output-image-upload'),
+    html.A(href="/",children=html.Img(src="assets\\upload.ico",className="upload_ico"),className="upload_icobtn"),
+        
+    
 ])
 
 def parse_contents(contents, filename, date):
@@ -350,8 +357,7 @@ def state_hover(feature):
 
 ########################################
 #
-@callback(#Output("total_gu_list", "children"),
-          Output("index-graph", "figure"),
+@callback(Output("index-graph", "figure"),
           Output("index-graph_stopline", "figure"),
           Output("graph", "figure"),
           Output("top5","figure"),
@@ -389,22 +395,7 @@ def change_total_gu_list(value):
         height=330,
         )
 
-    print("확인용")    
-    total_cnt=db.select_total_cnt_gu(month)
-    total=total_cnt['count'].sum()
-    print(total)
-    top5=gu['count'].sum()
-    print(top5)
-    etc=total-top5
-    print(etc)
-    gu_etc=gu
-    print(gu_etc)
-    #gu_etc.loc[-1]=['etc',etc]
-    print(type(gu_etc['count']))
-    #gu_etc['count'] = gu_etc['count'].astype(int)
-    print(type(gu_etc['count']))
-
-    fig0 = px.treemap(gu_etc, path=[px.Constant('서울시 범법행위 발생수 1~5위'), 'gu_nm'], 
+    fig0 = px.treemap(gu, path=[px.Constant('서울시 범법행위 발생수 1~5위'), 'gu_nm'], 
                 values='count', color='count',
                 color_continuous_scale='Blues',
                 hover_data=['gu_nm', 'count'],
@@ -417,7 +408,7 @@ def change_total_gu_list(value):
                         height=105,width=815,
                         paper_bgcolor='#F5F7FA',
                         autosize=False,
-                        font=dict({'family':'LINESeedKR-Bd','size':15}),
+                        font=dict({'family':'LINESeedKR-Bd','size':14.5}),
                         )
 
     return fig,fig4,make_choropleth(month),fig0
@@ -532,8 +523,7 @@ def display_dong_page(value):
         graph_layout([2,value])
     ]
 
-#세번째 페이지 오른쪽(cctv누르면 바뀌는 그래프)
-#세번째 페이지 오른쪽
+#세번째 페이지 오른쪽(cctv누르면 바뀌는 그래프
 def display_cctv_page(value):
     crime = ['정지선 위반', '보행자 도로 위반']
     
@@ -545,7 +535,6 @@ def display_cctv_page(value):
              hole = 0.7,
              width=500,
              height=230,
-             #title='범법행위 비율',
              color_discrete_sequence=['#4c78a8', '#72b7b2'])
     fig.update_layout(plot_bgcolor='#F5F7FA', font=dict({'family':'LINESeedKR-Bd'}),paper_bgcolor='#F5F7FA')
 
@@ -693,7 +682,6 @@ def graph_layout(value):
         dbc.Card(
             [dbc.Col(
                     [
-                        #dbc.Label("Options"),
                         dcc.RadioItems(id="display_figure", 
                         options=[
                                 {'label': '일간 통계', 'value': json.dumps(['일간 통계',value])},
@@ -811,7 +799,6 @@ def graph_cctv_layout(value):
         dbc.Card(
             [dbc.Col(
                     [
-                        #dbc.Label("Options"),
                         dcc.RadioItems(id="display_cctv_figure", 
                         value=json.dumps(['주간 통계',value]),
                         labelStyle={'display': 'inline-block', 'width': '10em', 'line-height':'0.5em'}
