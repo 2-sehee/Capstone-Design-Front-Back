@@ -533,8 +533,8 @@ def display_cctv_page(value):
     data = db.select_cctv(value,crime[0])
     data1 = db.select_cctv(value,crime[1])
     df = pd.concat([data,data1],ignore_index=True)
-
-    fig = px.pie(df, names='crime_type', 
+    
+    fig = px.pie(df, values='crime_cnt',names='crime_type', 
              hole = 0.7,
              width=500,
              height=230,
