@@ -68,7 +68,7 @@
 
 ##### 소개 영상
 
-[MP4]: https://user-images.githubusercontent.com/70104259/212274051-78900fd1-7fc0-4c2d-99ae-129e468e7372.mp4	"영상"
+https://user-images.githubusercontent.com/70104259/212274051-78900fd1-7fc0-4c2d-99ae-129e468e7372.mp4
 
 
 
